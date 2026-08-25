@@ -1,0 +1,14 @@
+# Build output
+build/
+build_log.txt
+Installer/Output/
+
+# JUCE-generated
+JuceLibraryCode/
+
+# IDE / OS clutter
+.vs/
+.vscode/
+*.user
+.DS_Store
+Thumbs.db
