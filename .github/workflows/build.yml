@@ -70,6 +70,60 @@ jobs:
           ditto -c -k --sequesterRsrc --keepParent "$artefacts/AU/Zinox Vocals.component" stage/ZinoxVocals-macOS-AU.zip
           ditto -c -k --sequesterRsrc --keepParent "$artefacts/Standalone/Zinox Vocals.app" stage/ZinoxVocals-macOS-Standalone.zip
 
+      - name: Build installer (pkgbuild)
+        run: |
+          set -e
+          artefacts="build/ZinoxVocals_artefacts/Release"
+          root="pkgroot"
+          rm -rf "$root"
+
+          mkdir -p "$root/vst3root/Library/Audio/Plug-Ins/VST3"
+          mkdir -p "$root/auroot/Library/Audio/Plug-Ins/Components"
+          mkdir -p "$root/approot/Applications"
+          cp -R "$artefacts/VST3/Zinox Vocals.vst3" "$root/vst3root/Library/Audio/Plug-Ins/VST3/"
+          cp -R "$artefacts/AU/Zinox Vocals.component" "$root/auroot/Library/Audio/Plug-Ins/Components/"
+          cp -R "$artefacts/Standalone/Zinox Vocals.app" "$root/approot/Applications/"
+
+          mkdir -p "$root/pkgs"
+          pkgbuild --root "$root/vst3root" --identifier com.zinoxaudio.zinoxvocals.vst3 \
+                   --version 1.0.0 --install-location "/" "$root/pkgs/vst3.pkg"
+          pkgbuild --root "$root/auroot" --identifier com.zinoxaudio.zinoxvocals.au \
+                   --version 1.0.0 --install-location "/" "$root/pkgs/au.pkg"
+          pkgbuild --root "$root/approot" --identifier com.zinoxaudio.zinoxvocals.app \
+                   --version 1.0.0 --install-location "/" "$root/pkgs/app.pkg"
+
+          echo "Zinox Vocals installs the VST3 plugin, the Audio Unit component, and the standalone app." > "$root/welcome.txt"
+
+          cat > "$root/distribution.xml" << 'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <installer-gui-script minSpecVersion="1">
+              <title>Zinox Vocals</title>
+              <organization>com.zinoxaudio</organization>
+              <options customize="allow" require-scripts="false" rootVolumeOnly="true"/>
+              <welcome file="welcome.txt"/>
+              <choices-outline>
+                  <line choice="vst3"/>
+                  <line choice="au"/>
+                  <line choice="app"/>
+              </choices-outline>
+              <choice id="vst3" title="VST3 Plugin" description="Installs the VST3 plugin for VST3 hosts.">
+                  <pkg-ref id="com.zinoxaudio.zinoxvocals.vst3"/>
+              </choice>
+              <choice id="au" title="Audio Unit" description="Installs the AU component for Logic Pro, GarageBand and other AU hosts.">
+                  <pkg-ref id="com.zinoxaudio.zinoxvocals.au"/>
+              </choice>
+              <choice id="app" title="Standalone App" description="Installs the standalone Zinox Vocals application.">
+                  <pkg-ref id="com.zinoxaudio.zinoxvocals.app"/>
+              </choice>
+              <pkg-ref id="com.zinoxaudio.zinoxvocals.vst3" version="1.0.0" onConclusion="none">vst3.pkg</pkg-ref>
+              <pkg-ref id="com.zinoxaudio.zinoxvocals.au" version="1.0.0" onConclusion="none">au.pkg</pkg-ref>
+              <pkg-ref id="com.zinoxaudio.zinoxvocals.app" version="1.0.0" onConclusion="none">app.pkg</pkg-ref>
+          </installer-gui-script>
+          XML
+
+          productbuild --distribution "$root/distribution.xml" --package-path "$root/pkgs" \
+                       --resources "$root" stage/ZinoxVocals-Setup-1.0.0.pkg
+
       - uses: actions/upload-artifact@v4
         with:
           name: ZinoxVocals-macOS
