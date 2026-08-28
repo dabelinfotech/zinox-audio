@@ -423,6 +423,8 @@
   #trialModalSuccess{ padding:28px 0 8px; }
   #trialModalSuccess h2{ font-size:clamp(1.5rem, 4vw, 2.1rem); }
   .modal-success-sub{ margin-top:16px; font-size:1rem; color:var(--ink-muted); }
+  .modal-downloads{ display:flex; flex-direction:column; gap:12px; margin-top:24px; }
+  .modal-downloads .btn{ width:100%; }
 
   /* ---------- FOOTER ---------- */
   footer{ border-top:1px solid var(--line); padding:48px 0; }
@@ -803,10 +805,15 @@
 </footer>
 
 <!-- Trial signup modal. Wired to Web3Forms (web3forms.com — free, no account,
-     just enter your email there to get an access key). Replace the two
-     REPLACE_WITH_* values below: the access key, and the direct download URL
-     that gets emailed to the person (e.g. a GitHub Release asset link once the
-     Windows/macOS trial installers are published somewhere public). -->
+     just enter your email there to get an access key) so you get notified of
+     every trial signup with the person's name and email. Replace
+     REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY below with your real key.
+
+     The actual installers are served directly from this site's own
+     /downloads/ folder (website/downloads/), so no GitHub access or email
+     autoresponder is needed for the customer to get their file — the
+     Web3Forms free plan doesn't email the submitter automatically (that's a
+     paid "autoresponder" feature); this design doesn't depend on it. -->
 <div class="modal-backdrop" id="trialModalBackdrop" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="trialModalTitle">
     <button type="button" class="modal-close" id="trialModalClose" aria-label="Close">&times;</button>
@@ -818,7 +825,7 @@
       <form class="trial-form" id="trialForm" action="https://api.web3forms.com/submit" method="POST">
         <input type="hidden" name="access_key" value="REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY">
         <input type="hidden" name="subject" value="New Zinox Vocals trial request">
-        <input type="hidden" name="redirect" value="REPLACE_WITH_YOUR_TRIAL_DOWNLOAD_URL">
+        <input type="hidden" name="redirect" value="/downloads/ZinoxVocals-Setup-1.0.0.exe">
         <input type="text" name="name" placeholder="First Name" autocomplete="given-name" required>
         <input type="email" name="email" placeholder="Your Email" autocomplete="email" required>
         <button type="submit" class="btn btn-primary modal-submit">Download Now</button>
@@ -829,7 +836,11 @@
 
     <div id="trialModalSuccess" hidden>
       <h2>Your Download Is Ready!</h2>
-      <p class="modal-success-sub">An email has been sent to you with download links.</p>
+      <p class="modal-success-sub">Pick your platform below to start your 7-day trial.</p>
+      <div class="modal-downloads">
+        <a href="/downloads/ZinoxVocals-Setup-1.0.0.exe" class="btn btn-primary">Download for Windows</a>
+        <a href="/downloads/ZinoxVocals-Setup-1.0.0.pkg" class="btn btn-ghost">Download for macOS</a>
+      </div>
     </div>
   </div>
 </div>
