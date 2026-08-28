@@ -641,9 +641,12 @@
         <p>One channel strip, one subscription — cancel anytime, or commit for the year and pay for ten months instead of twelve.</p>
       </div>
 
-      <!-- Stripe Payment Links: create these as recurring Prices in the Stripe Dashboard
-           (Products > Add product > Recurring), then paste each product's Payment Link
-           URL in place of the two REPLACE_WITH_*_LINK placeholders below. -->
+      <!-- Paddle hosted checkout links: in Paddle > Catalog > Products, create a
+           "Zinox Vocals" product with two recurring Prices (monthly $5, yearly $50),
+           then build each checkout link as YOUR_HOSTED_CHECKOUT_URL?price_id=pri_xxx
+           (Paddle > Checkout > Checkout settings gives you the base hosted URL; the
+           price_id comes from each Price you created). Paste the two finished links
+           in place of the REPLACE_WITH_*_LINK placeholders below. -->
       <div class="pricing-grid" data-reveal>
         <div class="plan-card">
           <p class="plan-name">Monthly</p>
@@ -655,7 +658,7 @@
             <li>VST3, AU &amp; Standalone — Windows &amp; macOS</li>
             <li>7-day free trial, no card required</li>
           </ul>
-          <a href="https://buy.stripe.com/REPLACE_WITH_MONTHLY_LINK" class="btn btn-ghost">Start Monthly</a>
+          <a href="https://REPLACE_WITH_YOUR_PADDLE_CHECKOUT_URL?price_id=REPLACE_WITH_MONTHLY_PRICE_ID" class="btn btn-ghost">Start Monthly</a>
         </div>
         <div class="plan-card featured">
           <span class="badge">Best value</span>
@@ -668,7 +671,7 @@
             <li>Priority support</li>
             <li>7-day free trial, no card required</li>
           </ul>
-          <a href="https://buy.stripe.com/REPLACE_WITH_ANNUAL_LINK" class="btn btn-primary">Start Annual</a>
+          <a href="https://REPLACE_WITH_YOUR_PADDLE_CHECKOUT_URL?price_id=REPLACE_WITH_ANNUAL_PRICE_ID" class="btn btn-primary">Start Annual</a>
         </div>
       </div>
       <p class="price-fine">Placeholder pricing — swap in your real billing plan. Prices in USD; cancel anytime from your account.</p>
