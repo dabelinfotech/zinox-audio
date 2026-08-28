@@ -447,4 +447,97 @@ void LogoComponent::paint (juce::Graphics& g)
     }
 }
 
+// ===========================================================================
+//  FileDropZone
+// ===========================================================================
+
+FileDropZone::FileDropZone() = default;
+
+bool FileDropZone::isSupportedAudioFile (const juce::File& f)
+{
+    return f.hasFileExtension ("wav;aiff;aif;mp3;flac;ogg;m4a;wma");
+}
+
+bool FileDropZone::isInterestedInFileDrag (const juce::StringArray& files)
+{
+    for (const auto& f : files)
+        if (isSupportedAudioFile (juce::File (f)))
+            return true;
+
+    return false;
+}
+
+void FileDropZone::fileDragEnter (const juce::StringArray&, int, int)
+{
+    dragHighlight = true;
+    repaint();
+}
+
+void FileDropZone::fileDragExit (const juce::StringArray&)
+{
+    dragHighlight = false;
+    repaint();
+}
+
+void FileDropZone::filesDropped (const juce::StringArray& files, int, int)
+{
+    dragHighlight = false;
+
+    for (const auto& f : files)
+    {
+        juce::File file (f);
+
+        if (isSupportedAudioFile (file))
+        {
+            setLoadedFile (file);
+
+            if (onFileDropped != nullptr)
+                onFileDropped (file);
+
+            break;
+        }
+    }
+
+    repaint();
+}
+
+void FileDropZone::setLoadedFile (const juce::File& file)
+{
+    loadedFile = file;
+    repaint();
+}
+
+void FileDropZone::paint (juce::Graphics& g)
+{
+    auto r = getLocalBounds().toFloat();
+    const auto corner = 6.0f;
+
+    g.setColour (dragHighlight ? gold.withAlpha (0.18f) : panelInner.withAlpha (0.6f));
+    g.fillRoundedRectangle (r, corner);
+
+    g.setColour (dragHighlight ? goldBright : panelOutline);
+    juce::Path dashed;
+    dashed.addRoundedRectangle (r.reduced (1.0f), corner);
+    const float dashLengths[] = { 5.0f, 4.0f };
+    juce::PathStrokeType stroke (1.4f);
+    juce::Path dashedStroke;
+    stroke.createDashedStroke (dashedStroke, dashed, dashLengths, 2);
+    g.fillPath (dashedStroke);
+
+    g.setFont (labelFont (12.0f, ! loadedFile.existsAsFile()));
+
+    if (loadedFile.existsAsFile())
+    {
+        g.setColour (text);
+        drawTracked (g, loadedFile.getFileName(), r.reduced (10.0f, 0.0f).toNearestInt(),
+                     juce::Justification::centred, 1.0f);
+    }
+    else
+    {
+        g.setColour (textFaint);
+        drawTracked (g, "DROP AN AUDIO FILE HERE, OR CLICK IMPORT",
+                     r.toNearestInt(), juce::Justification::centred, 1.2f);
+    }
+}
+
 } // namespace zx

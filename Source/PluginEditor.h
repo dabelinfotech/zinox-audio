@@ -3,6 +3,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include "PluginProcessor.h"
+#include "OfflineRenderer.h"
 #include "GUI/ZinoxLookAndFeel.h"
 #include "GUI/Widgets.h"
 
@@ -21,6 +22,7 @@ private:
     void timerCallback() override;
     void changeListenerCallback (juce::ChangeBroadcaster*) override;
 
+    void buildFileBar();
     void buildHeader();
     void buildLeftColumn();
     void buildCentre();
@@ -31,11 +33,23 @@ private:
     void showLicenseDialog();
     void updateLicenseBadge();
 
+    void setImportedFile (const juce::File&);
+    void chooseImportFile();
+    void chooseExportFile();
+    void runExport (const juce::File& destFile);
+
     void paintBackground (juce::Graphics&);
     void paintFooter (juce::Graphics&);
 
     ZinoxVocalsProcessor& processor;
     zx::ZinoxLookAndFeel lnf;
+
+    // Standalone builds get a taller window with an import/export bar; a
+    // plugin hosted in a DAW does not, since the DAW already owns the audio
+    // transport. Both are computed once, up front, since AudioProcessor's
+    // wrapperType never changes after construction.
+    const bool isStandaloneApp;
+    const int  designHeight;
 
     using SliderAttach = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ComboAttach  = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
@@ -53,6 +67,14 @@ private:
 
     juce::TextButton licenseBadge { "UNLICENSED" };
     std::unique_ptr<juce::AlertWindow> licenseWindow;
+    int trialCheckCounter = 0;
+
+    // --- standalone-only file import/export ----------------------------------
+    std::unique_ptr<zx::FileDropZone> fileDropZone;
+    std::unique_ptr<juce::TextButton> importButton;
+    std::unique_ptr<juce::TextButton> exportButton;
+    std::unique_ptr<juce::FileChooser> activeFileChooser;
+    juce::File importedFile;
 
     // --- left column --------------------------------------------------------
     zx::ZinoxKnob inputKnob   { "INPUT",    true };
@@ -109,7 +131,7 @@ private:
 
     // Layout rectangles cached by resized() and reused by paint().
     juce::Rectangle<int> headerArea, leftPanelArea, centrePanelArea, rightPanelArea, footerArea;
-    juce::Rectangle<int> toneRowArea, dynRowArea, titleArea;
+    juce::Rectangle<int> toneRowArea, dynRowArea, titleArea, fileBarArea;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ZinoxVocalsEditor)
 };

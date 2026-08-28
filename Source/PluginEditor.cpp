@@ -5,17 +5,21 @@ using namespace zx::theme;
 
 namespace
 {
-    constexpr int kDefaultWidth  = 940;
-    constexpr int kDefaultHeight = 660;
+    constexpr int kDefaultWidth   = 940;
+    constexpr int kDefaultHeight  = 660;
+    constexpr int kFileBarHeight  = 54;
 }
 
 // ===========================================================================
 
 ZinoxVocalsEditor::ZinoxVocalsEditor (ZinoxVocalsProcessor& p)
-    : juce::AudioProcessorEditor (&p), processor (p)
+    : juce::AudioProcessorEditor (&p), processor (p),
+      isStandaloneApp (p.wrapperType == juce::AudioProcessor::wrapperType_Standalone),
+      designHeight (kDefaultHeight + (isStandaloneApp ? kFileBarHeight : 0))
 {
     setLookAndFeel (&lnf);
 
+    buildFileBar();
     buildHeader();
     buildLeftColumn();
     buildCentre();
@@ -24,11 +28,22 @@ ZinoxVocalsEditor::ZinoxVocalsEditor (ZinoxVocalsProcessor& p)
     processor.getPresetManager().addChangeListener (this);
     refreshPresetList();
 
+    const auto& trial = processor.getTrialStatus();
+
+    if (trial.expired && ! processor.getLicenseInfo().valid)
+    {
+        juce::AlertWindow::showMessageBoxAsync (
+            juce::MessageBoxIconType::WarningIcon, "Trial Ended",
+            "Your 7-day free trial of Zinox Vocals has ended, and audio processing is "
+            "now disabled.\n\nEnter a license key at any time to keep using it - click "
+            "the badge in the top right.");
+    }
+
     setResizable (true, true);
-    setResizeLimits (kDefaultWidth * 3 / 4, kDefaultHeight * 3 / 4,
-                     kDefaultWidth * 3 / 2, kDefaultHeight * 3 / 2);
-    getConstrainer()->setFixedAspectRatio ((double) kDefaultWidth / (double) kDefaultHeight);
-    setSize (kDefaultWidth, kDefaultHeight);
+    setResizeLimits (kDefaultWidth * 3 / 4, designHeight * 3 / 4,
+                     kDefaultWidth * 3 / 2, designHeight * 3 / 2);
+    getConstrainer()->setFixedAspectRatio ((double) kDefaultWidth / (double) designHeight);
+    setSize (kDefaultWidth, designHeight);
 
     startTimerHz (30);
 }
@@ -42,6 +57,27 @@ ZinoxVocalsEditor::~ZinoxVocalsEditor()
 // ===========================================================================
 //  Construction
 // ===========================================================================
+
+void ZinoxVocalsEditor::buildFileBar()
+{
+    if (! isStandaloneApp)
+        return;
+
+    fileDropZone = std::make_unique<zx::FileDropZone>();
+    fileDropZone->onFileDropped = [this] (const juce::File& f) { setImportedFile (f); };
+    addAndMakeVisible (*fileDropZone);
+
+    importButton = std::make_unique<juce::TextButton> ("IMPORT");
+    importButton->setTooltip ("Load an audio file to process and export.");
+    importButton->onClick = [this] { chooseImportFile(); };
+    addAndMakeVisible (*importButton);
+
+    exportButton = std::make_unique<juce::TextButton> ("EXPORT");
+    exportButton->setTooltip ("Render the imported file through the current settings and save it.");
+    exportButton->setEnabled (false);
+    exportButton->onClick = [this] { chooseExportFile(); };
+    addAndMakeVisible (*exportButton);
+}
 
 void ZinoxVocalsEditor::buildHeader()
 {
@@ -244,6 +280,81 @@ void ZinoxVocalsEditor::refreshPresetList()
         presetBox.setText (pm.getCurrentPresetName(), juce::dontSendNotification);
 }
 
+// ===========================================================================
+//  Standalone file import/export
+// ===========================================================================
+
+void ZinoxVocalsEditor::setImportedFile (const juce::File& file)
+{
+    importedFile = file;
+
+    if (fileDropZone != nullptr)
+        fileDropZone->setLoadedFile (file);
+
+    if (exportButton != nullptr)
+        exportButton->setEnabled (file.existsAsFile());
+}
+
+void ZinoxVocalsEditor::chooseImportFile()
+{
+    activeFileChooser = std::make_unique<juce::FileChooser> (
+        "Choose an audio file to import", juce::File(),
+        "*.wav;*.aiff;*.aif;*.mp3;*.flac;*.ogg;*.m4a;*.wma");
+
+    activeFileChooser->launchAsync (
+        juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [this] (const juce::FileChooser& fc)
+        {
+            const auto f = fc.getResult();
+
+            if (f.existsAsFile())
+                setImportedFile (f);
+        });
+}
+
+void ZinoxVocalsEditor::chooseExportFile()
+{
+    if (! importedFile.existsAsFile())
+        return;
+
+    if (processor.getTrialStatus().expired && ! processor.getLicenseInfo().valid)
+    {
+        juce::AlertWindow::showMessageBoxAsync (
+            juce::MessageBoxIconType::WarningIcon, "Trial Ended",
+            "Your free trial has ended, so export is disabled. Enter a license key to "
+            "continue - click the badge in the top right.");
+        return;
+    }
+
+    const auto suggested = importedFile.getSiblingFile (
+        importedFile.getFileNameWithoutExtension() + " (Zinox Vocals).wav");
+
+    activeFileChooser = std::make_unique<juce::FileChooser> (
+        "Export processed audio as...", suggested, "*.wav");
+
+    activeFileChooser->launchAsync (
+        juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles
+            | juce::FileBrowserComponent::warnAboutOverwriting,
+        [this] (const juce::FileChooser& fc)
+        {
+            const auto f = fc.getResult();
+
+            if (f != juce::File())
+                runExport (f);
+        });
+}
+
+void ZinoxVocalsEditor::runExport (const juce::File& destFile)
+{
+    juce::MemoryBlock state;
+    processor.getStateInformation (state);
+
+    // Reports the result and deletes itself once rendering finishes -
+    // nothing to hold onto here.
+    auto* renderer = new zx::OfflineRenderer (importedFile, destFile, state);
+    renderer->launchThread();
+}
+
 void ZinoxVocalsEditor::showSaveDialog()
 {
     if (saveWindow != nullptr)
@@ -289,17 +400,23 @@ void ZinoxVocalsEditor::changeListenerCallback (juce::ChangeBroadcaster*)
 
 void ZinoxVocalsEditor::updateLicenseBadge()
 {
-    const auto& info = processor.getLicenseInfo();
+    const auto& info  = processor.getLicenseInfo();
+    const auto& trial = processor.getTrialStatus();
 
     if (info.valid)
     {
         licenseBadge.setButtonText ("LICENSED");
         licenseBadge.setColour (juce::TextButton::textColourOffId, textDim);
     }
+    else if (trial.expired)
+    {
+        licenseBadge.setButtonText ("TRIAL EXPIRED");
+        licenseBadge.setColour (juce::TextButton::textColourOffId, meterRed);
+    }
     else
     {
-        licenseBadge.setButtonText ("UNLICENSED");
-        licenseBadge.setColour (juce::TextButton::textColourOffId, meterRed);
+        licenseBadge.setButtonText ("TRIAL: " + juce::String (trial.daysRemaining) + "D LEFT");
+        licenseBadge.setColour (juce::TextButton::textColourOffId, gold);
     }
 }
 
@@ -308,15 +425,30 @@ void ZinoxVocalsEditor::showLicenseDialog()
     if (licenseWindow != nullptr)
         return;
 
-    const auto& info = processor.getLicenseInfo();
+    const auto& info  = processor.getLicenseInfo();
+    const auto& trial = processor.getTrialStatus();
 
-    const auto message = info.valid
-        ? "Licensed to " + info.name + " <" + info.email + ">.\n\n"
-          "Paste a different key below to replace it."
-        : juce::String ("This copy is unlicensed - unlicensed audio gets a brief gain dip every "
-                        "45 seconds as a reminder.\n\n"
-                        "Paste your license key below to activate it. If you were sent a "
-                        "machine-locked key, it must match the Machine ID shown below.");
+    juce::String message;
+
+    if (info.valid)
+    {
+        message = "Licensed to " + info.name + " <" + info.email + ">.\n\n"
+                  "Paste a different key below to replace it.";
+    }
+    else if (trial.expired)
+    {
+        message = "Your 7-day free trial has ended and audio processing is disabled.\n\n"
+                  "Paste your license key below to keep using Zinox Vocals. If you were "
+                  "sent a machine-locked key, it must match the Machine ID shown below.";
+    }
+    else
+    {
+        message = "Trial mode - " + juce::String (trial.daysRemaining) + " day"
+                  + juce::String (trial.daysRemaining == 1 ? "" : "s") + " remaining, full quality.\n\n"
+                  "Paste a license key below at any time to keep using it after the trial "
+                  "ends. If you were sent a machine-locked key, it must match the Machine "
+                  "ID shown below.";
+    }
 
     licenseWindow = std::make_unique<juce::AlertWindow> ("ZINOX VOCALS LICENSE", message,
                                                          juce::MessageBoxIconType::NoIcon, this);
@@ -365,6 +497,27 @@ void ZinoxVocalsEditor::timerCallback()
     outMeter.setLevels (processor.meters.outLeft.load(), processor.meters.outRight.load());
     limitMeter.setGainReduction (processor.meters.limitGr.load());
     deEssMeter.setGainReduction (processor.meters.deEssGr.load());
+
+    // The trial check touches disk, so it runs on this UI timer rather than
+    // every audio block - every 5 seconds (at 30 Hz) is plenty responsive
+    // for a boundary measured in days.
+    if (++trialCheckCounter >= 150)
+    {
+        trialCheckCounter = 0;
+        const bool wasExpired = processor.getTrialStatus().expired;
+        processor.refreshTrialStatus();
+        updateLicenseBadge();
+
+        if (! wasExpired && processor.getTrialStatus().expired && ! processor.getLicenseInfo().valid)
+        {
+            repaint();
+            juce::AlertWindow::showMessageBoxAsync (
+                juce::MessageBoxIconType::WarningIcon, "Trial Ended",
+                "Your 7-day free trial of Zinox Vocals has just ended, and audio "
+                "processing is now disabled.\n\nEnter a license key at any time to "
+                "keep using it - click the badge in the top right.");
+        }
+    }
 }
 
 // ===========================================================================
@@ -377,7 +530,7 @@ void ZinoxVocalsEditor::resized()
     // keeps its proportions at any window size.
     const auto scale = (float) getWidth() / (float) kDefaultWidth;
 
-    auto full = juce::Rectangle<int> (0, 0, kDefaultWidth, kDefaultHeight);
+    auto full = juce::Rectangle<int> (0, 0, kDefaultWidth, designHeight);
 
     auto applyScale = [scale] (juce::Component& c, juce::Rectangle<int> r)
     {
@@ -388,6 +541,21 @@ void ZinoxVocalsEditor::resized()
     };
 
     auto body = full.reduced (16, 14);
+
+    // --- file import/export bar (standalone only) ----------------------------
+    if (isStandaloneApp)
+    {
+        fileBarArea = body.removeFromTop (kFileBarHeight);
+        body.removeFromTop (10);
+
+        auto bar = fileBarArea.reduced (0, 6);
+
+        applyScale (*importButton, bar.removeFromLeft (86).reduced (0, 3));
+        bar.removeFromLeft (8);
+        applyScale (*exportButton, bar.removeFromRight (86).reduced (0, 3));
+        bar.removeFromRight (8);
+        applyScale (*fileDropZone, bar);
+    }
 
     // --- header -------------------------------------------------------------
     headerArea = body.removeFromTop (52);
@@ -708,6 +876,9 @@ void ZinoxVocalsEditor::paint (juce::Graphics& g)
     }
 
     // --- panels -------------------------------------------------------------
+    if (isStandaloneApp)
+        drawPanel (g, fileBarArea.toFloat() * scale, 10.0f * scale);
+
     drawPanel (g, leftPanelArea.toFloat() * scale, 12.0f * scale);
     drawPanel (g, centrePanelArea.toFloat() * scale, 12.0f * scale);
     drawPanel (g, rightPanelArea.toFloat() * scale, 12.0f * scale);
@@ -753,5 +924,25 @@ void ZinoxVocalsEditor::paint (juce::Graphics& g)
     {
         g.setColour (backgroundBottom.withAlpha (0.55f));
         g.fillAll();
+    }
+
+    // Same treatment, stronger message, when the trial has run out.
+    if (processor.getTrialStatus().expired && ! processor.getLicenseInfo().valid)
+    {
+        auto r = getLocalBounds().toFloat();
+
+        g.setColour (backgroundBottom.withAlpha (0.82f));
+        g.fillAll();
+
+        g.setFont (labelFont (22.0f * scale, true));
+        g.setColour (goldBright);
+        drawTracked (g, "FREE TRIAL ENDED", r.withHeight (r.getHeight() * 0.5f).toNearestInt(),
+                     juce::Justification::centred, 2.0f);
+
+        g.setFont (labelFont (13.0f * scale, false));
+        g.setColour (text);
+        drawTracked (g, "ENTER A LICENSE KEY TO KEEP USING ZINOX VOCALS",
+                     r.withTop (r.getCentreY()).toNearestInt(),
+                     juce::Justification::centred, 1.4f);
     }
 }

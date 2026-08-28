@@ -6,6 +6,7 @@
 #include "Parameters.h"
 #include "PresetManager.h"
 #include "Licensing.h"
+#include "Trial.h"
 #include "DSP/Denoiser.h"
 #include "DSP/ToneStack.h"
 #include "DSP/DeEsser.h"
@@ -48,10 +49,15 @@ public:
     juce::AudioProcessorValueTreeState& getAPVTS() noexcept { return apvts; }
     zx::PresetManager& getPresetManager() noexcept { return presetManager; }
 
-    // --- licensing ------------------------------------------------------------
+    // --- licensing & trial ------------------------------------------------------
     const zx::License::Info& getLicenseInfo() const noexcept { return licenseInfo; }
     /** Verifies and, if valid, saves the key; updates getLicenseInfo() either way. */
     zx::License::Info activateLicense (const juce::String& licenseBlob);
+
+    const zx::Trial::Status& getTrialStatus() const noexcept { return trialStatus; }
+    /** Re-checks the trial clock. Cheap enough to call from a UI timer, but
+        not from the audio thread - it touches disk. */
+    void refreshTrialStatus();
 
     /** Metering values, written by the audio thread and read by the UI. */
     struct MeterState
@@ -74,15 +80,13 @@ private:
     juce::AudioProcessorValueTreeState apvts;
     zx::PresetManager presetManager;
     zx::License::Info licenseInfo;
+    zx::Trial::Status trialStatus;
 
-    // Unlicensed builds get a brief, unmistakable gain dip every so often
-    // instead of silently degrading audio quality - if you hear it, you'll
-    // know exactly why. Sample-counted rather than clock-based so it can't
-    // be reset by changing the system date.
-    juce::int64 samplesUntilNextNag = 0;
-    int nagSamplesRemaining = 0;
-    int nagTotalSamples = 0;
-    void applyUnlicensedNag (juce::AudioBuffer<float>& buffer);
+    // Read on the audio thread every block, so it has to be lock-free and
+    // cheap - refreshTrialStatus() is what keeps it up to date, and that
+    // does the (comparatively expensive) file-based check instead.
+    std::atomic<bool> trialBlocked { false };
+    void updateTrialBlockedFlag() noexcept;
 
     // --- cached parameter pointers (avoids string lookups per block) --------
     std::atomic<float>* pInput = nullptr;

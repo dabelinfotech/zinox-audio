@@ -163,4 +163,34 @@ private:
     bool showWordmark;
 };
 
+// ---------------------------------------------------------------------------
+/** Drag-and-drop target for a single audio file (standalone import/export). */
+class FileDropZone : public juce::Component,
+                     public juce::FileDragAndDropTarget
+{
+public:
+    FileDropZone();
+
+    void paint (juce::Graphics&) override;
+
+    bool isInterestedInFileDrag (const juce::StringArray& files) override;
+    void fileDragEnter (const juce::StringArray& files, int x, int y) override;
+    void fileDragExit (const juce::StringArray& files) override;
+    void filesDropped (const juce::StringArray& files, int x, int y) override;
+
+    /** Updates the displayed filename without going through drag-and-drop -
+        call this after a file is chosen via the Import button too. */
+    void setLoadedFile (const juce::File& file);
+
+    std::function<void (const juce::File&)> onFileDropped;
+
+private:
+    static bool isSupportedAudioFile (const juce::File& f);
+
+    juce::File loadedFile;
+    bool dragHighlight = false;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FileDropZone)
+};
+
 } // namespace zx

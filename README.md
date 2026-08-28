@@ -127,17 +127,59 @@ issue a key that works anywhere.
 
 Self-check a key before sending it: `.\ZinoxLicenseGen.exe verify "<blob>"`.
 
-**Unlicensed behaviour:** rather than a time-limited trial (easily reset by reinstalling
-or changing the system clock), an unlicensed instance gets a brief, unmistakable gain
-dip every 45 seconds — sample-counted, not clock-based, so it can't be bypassed that
-way. A valid key stops it immediately and permanently (the key is saved and re-verified
-on every launch).
-
 **Reality check:** no offline scheme is unbreakable — a determined cracker can patch a
 binary regardless of the protection inside it. This raises the bar past casual copying
 and gives you a real paper trail (every key is tied to a name and email), which is what
 actually protects revenue for an indie plugin. If you outgrow it, the CMake/JUCE
 structure here doesn't preclude layering on a real activation server later.
+
+---
+
+## Free trial
+
+Every fresh installation gets a **7-day, full-quality** trial — no watermarking, no
+nagging, nothing held back. The clock starts on first launch and is tracked in
+`%APPDATA%\Zinox Audio\Zinox Vocals\trial.dat` ([Source/Trial.cpp](Source/Trial.cpp)),
+independent of the license file. The header badge reads **TRIAL: N DAYS LEFT** for the
+duration.
+
+Once the 7 days are up and no license has been entered, the plugin **stops processing
+audio entirely** — `processBlock` outputs silence rather than quietly degrading the
+signal — and the interface is covered by a "FREE TRIAL ENDED" overlay with a prompt to
+enter a license key. There's no in-between state: it's a real trial, then a hard stop.
+
+A high-water-mark check means winding the system clock backwards can't extend the
+trial — the elapsed-time calculation always uses the latest clock value this install
+has ever seen. Like the license system, this is an offline check with the same honest
+limits: it lives in a file, and a sufficiently determined user could delete that file.
+It isn't designed to be forensic-grade; it's designed so that using the plugin honestly
+is much less effort than not.
+
+---
+
+## Standalone: import & export
+
+Only the Standalone build shows the bar across the top of the window — a VST3/AU
+instance running inside a DAW already owns the audio transport, so it doesn't need
+one, and doesn't show one.
+
+- **Drop an audio file** onto the bar, or click **IMPORT**, to load a WAV / AIFF / MP3 /
+  FLAC / OGG / M4A file.
+- Click **EXPORT** to bounce it through the plugin's *current* knob settings and save
+  the result as a new WAV file.
+
+The export runs on a background thread ([Source/OfflineRenderer.cpp](Source/OfflineRenderer.cpp))
+against a throwaway second instance of the plugin loaded with a snapshot of the live
+one's parameters, so it can never disturb whatever you're doing live, and the rendered
+file always matches what you'd currently hear. It also compensates for the plugin's own
+reported latency (limiter look-ahead, the denoiser's analysis window, any oversampling)
+by feeding a little extra silence at the end and trimming the equivalent delay from the
+front, so the output file is sample-aligned with the input and exactly the same length.
+
+This is an offline bounce, not a live audition path — there's no "play the imported
+file through your speakers while you turn knobs" mode in this version. Adjust the
+sound using your DAW or microphone as the source, then Import + Export when you're
+happy with the settings.
 
 ---
 
@@ -199,8 +241,12 @@ opening a DAW.
 | [Source/PluginProcessor.cpp](Source/PluginProcessor.cpp) | Signal chain, oversampling, latency reporting, metering |
 | [Source/PluginEditor.cpp](Source/PluginEditor.cpp) | Front panel layout and painting |
 | [Source/PresetManager.cpp](Source/PresetManager.cpp) | Factory snapshots and user preset files |
+| [Source/Licensing.h](Source/Licensing.h) / [.cpp](Source/Licensing.cpp) | Offline RSA license key verification |
+| [Source/Trial.h](Source/Trial.h) / [.cpp](Source/Trial.cpp) | 7-day free trial clock |
+| [Source/OfflineRenderer.cpp](Source/OfflineRenderer.cpp) | Standalone file import/export (offline bounce) |
+| [Source/Tools/LicenseKeyGen.cpp](Source/Tools/LicenseKeyGen.cpp) | Internal CLI - generates keys, never shipped to customers |
 | [Source/DSP/](Source/DSP/) | `Denoiser`, `ToneStack`, `DeEsser`, `Compressor`, `Push`, `Saturator`, `Limiter`, `Envelope` |
-| [Source/GUI/](Source/GUI/) | `Theme` (palette), `ZinoxLookAndFeel` (drawing), `Widgets` (knobs, meters, switches) |
+| [Source/GUI/](Source/GUI/) | `Theme` (palette), `ZinoxLookAndFeel` (drawing), `Widgets` (knobs, meters, switches, `FileDropZone`) |
 
 ### Real-time safety
 

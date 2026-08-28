@@ -61,6 +61,8 @@ target_sources(ZinoxVocals PRIVATE
     Source/Parameters.cpp
     Source/PresetManager.cpp
     Source/Licensing.cpp
+    Source/Trial.cpp
+    Source/OfflineRenderer.cpp
     Source/GUI/ZinoxLookAndFeel.cpp
     Source/GUI/Widgets.cpp
 )

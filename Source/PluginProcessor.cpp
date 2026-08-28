@@ -9,8 +9,11 @@ ZinoxVocalsProcessor::ZinoxVocalsProcessor()
                                 .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "ZINOX_VOCALS", createParameterLayout()),
       presetManager (apvts),
-      licenseInfo (zx::License::loadSaved())
+      licenseInfo (zx::License::loadSaved()),
+      trialStatus (zx::Trial::checkAndUpdate())
 {
+    updateTrialBlockedFlag();
+
     auto get = [this] (const char* id) { return apvts.getRawParameterValue (id); };
 
     pInput        = get (ParamID::input);
@@ -93,10 +96,6 @@ void ZinoxVocalsProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 
     currentOsChoice = -1;
     reportedLatency = -1;
-
-    samplesUntilNextNag = (juce::int64) (sampleRate * 45.0);
-    nagTotalSamples = (int) (sampleRate * 0.2);
-    nagSamplesRemaining = 0;
 
     updateParameters();
     updateLatency();
@@ -243,6 +242,22 @@ void ZinoxVocalsProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // reaches the host when the reported value actually moves.
     updateLatency();
 
+    // The free trial is a real, full-quality 7 days - no watermarking, no
+    // nagging. Once it's over and no license has been entered, the plugin
+    // goes silent rather than quietly degrading, so there's never any doubt
+    // about why.
+    if (trialBlocked.load (std::memory_order_relaxed))
+    {
+        buffer.clear();
+        meters.outLeft.store (-100.0f);
+        meters.outRight.store (-100.0f);
+        meters.limitGr.store (0.0f);
+        meters.deEssGr.store (0.0f);
+        meters.controlGr.store (0.0f);
+        meters.pushGr.store (0.0f);
+        return;
+    }
+
     if (pBypass->load() > 0.5f)
     {
         meters.outLeft.store (-100.0f);
@@ -326,10 +341,6 @@ void ZinoxVocalsProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         }
     }
 
-    // 10. unlicensed reminder --------------------------------------------------
-    if (! licenseInfo.valid)
-        applyUnlicensedNag (buffer);
-
     // --- metering -----------------------------------------------------------
     const auto peakL = buffer.getMagnitude (0, 0, numSamples);
     const auto peakR = totalOut > 1 ? buffer.getMagnitude (1, 0, numSamples) : peakL;
@@ -372,34 +383,19 @@ void ZinoxVocalsProcessor::setStateInformation (const void* data, int sizeInByte
 zx::License::Info ZinoxVocalsProcessor::activateLicense (const juce::String& licenseBlob)
 {
     licenseInfo = zx::License::activate (licenseBlob);
+    updateTrialBlockedFlag();
     return licenseInfo;
 }
 
-void ZinoxVocalsProcessor::applyUnlicensedNag (juce::AudioBuffer<float>& buffer)
+void ZinoxVocalsProcessor::refreshTrialStatus()
 {
-    const auto numCh = buffer.getNumChannels();
-    const auto numSamples = buffer.getNumSamples();
-    constexpr float depth = 0.15f; // gain at the deepest point of the dip
+    trialStatus = zx::Trial::checkAndUpdate();
+    updateTrialBlockedFlag();
+}
 
-    for (int i = 0; i < numSamples; ++i)
-    {
-        if (nagSamplesRemaining <= 0 && --samplesUntilNextNag <= 0)
-        {
-            nagSamplesRemaining = nagTotalSamples;
-            samplesUntilNextNag = (juce::int64) (getSampleRate() * 45.0);
-        }
-
-        if (nagSamplesRemaining > 0)
-        {
-            const auto t = (float) (nagTotalSamples - nagSamplesRemaining) / (float) nagTotalSamples;
-            const auto env = 1.0f - (1.0f - depth) * std::sin (juce::MathConstants<float>::pi * t);
-
-            for (int ch = 0; ch < numCh; ++ch)
-                buffer.getWritePointer (ch)[i] *= env;
-
-            --nagSamplesRemaining;
-        }
-    }
+void ZinoxVocalsProcessor::updateTrialBlockedFlag() noexcept
+{
+    trialBlocked.store (! licenseInfo.valid && trialStatus.expired, std::memory_order_relaxed);
 }
 
 // ---------------------------------------------------------------------------
