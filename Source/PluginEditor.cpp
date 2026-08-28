@@ -68,9 +68,17 @@ void ZinoxVocalsEditor::buildFileBar()
     addAndMakeVisible (*fileDropZone);
 
     importButton = std::make_unique<juce::TextButton> ("IMPORT");
-    importButton->setTooltip ("Load an audio file to process and export.");
+    importButton->setTooltip ("Load an audio file to audition live or export.");
     importButton->onClick = [this] { chooseImportFile(); };
     addAndMakeVisible (*importButton);
+
+    playButton = std::make_unique<juce::TextButton> ("PLAY");
+    playButton->setTooltip ("Loop the imported file through the plugin and out to your speakers - "
+                            "turn any knob and hear the change immediately.");
+    playButton->setClickingTogglesState (true);
+    playButton->setEnabled (false);
+    playButton->onClick = [this] { togglePlayback(); };
+    addAndMakeVisible (*playButton);
 
     exportButton = std::make_unique<juce::TextButton> ("EXPORT");
     exportButton->setTooltip ("Render the imported file through the current settings and save it.");
@@ -286,13 +294,47 @@ void ZinoxVocalsEditor::refreshPresetList()
 
 void ZinoxVocalsEditor::setImportedFile (const juce::File& file)
 {
-    importedFile = file;
+    const bool loaded = file.existsAsFile() && processor.loadFileForPlayback (file);
+
+    importedFile = loaded ? file : juce::File();
 
     if (fileDropZone != nullptr)
-        fileDropZone->setLoadedFile (file);
+        fileDropZone->setLoadedFile (importedFile);
 
     if (exportButton != nullptr)
-        exportButton->setEnabled (file.existsAsFile());
+        exportButton->setEnabled (loaded);
+
+    if (playButton != nullptr)
+    {
+        playButton->setEnabled (loaded);
+        playButton->setToggleState (false, juce::dontSendNotification);
+        updatePlayButton();
+    }
+
+    if (file.existsAsFile() && ! loaded)
+    {
+        juce::AlertWindow::showMessageBoxAsync (
+            juce::MessageBoxIconType::WarningIcon, "Couldn't Load File",
+            "\"" + file.getFileName() + "\" doesn't look like a supported audio file.");
+    }
+}
+
+void ZinoxVocalsEditor::togglePlayback()
+{
+    if (playButton == nullptr)
+        return;
+
+    const bool shouldPlay = playButton->getToggleState();
+    processor.setFilePlaying (shouldPlay);
+    updatePlayButton();
+}
+
+void ZinoxVocalsEditor::updatePlayButton()
+{
+    if (playButton == nullptr)
+        return;
+
+    playButton->setButtonText (processor.isFilePlaying() ? "STOP" : "PLAY");
 }
 
 void ZinoxVocalsEditor::chooseImportFile()
@@ -553,6 +595,8 @@ void ZinoxVocalsEditor::resized()
         applyScale (*importButton, bar.removeFromLeft (86).reduced (0, 3));
         bar.removeFromLeft (8);
         applyScale (*exportButton, bar.removeFromRight (86).reduced (0, 3));
+        bar.removeFromRight (8);
+        applyScale (*playButton, bar.removeFromRight (70).reduced (0, 3));
         bar.removeFromRight (8);
         applyScale (*fileDropZone, bar);
     }

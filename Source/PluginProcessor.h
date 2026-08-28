@@ -2,6 +2,8 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
+#include <juce_audio_devices/juce_audio_devices.h>
+#include <juce_audio_formats/juce_audio_formats.h>
 
 #include "Parameters.h"
 #include "PresetManager.h"
@@ -59,6 +61,19 @@ public:
         not from the audio thread - it touches disk. */
     void refreshTrialStatus();
 
+    // --- standalone live file playback -----------------------------------------
+    // Only meaningful when wrapperType == wrapperType_Standalone: substitutes
+    // an imported file for the live input, so it plays through the exact same
+    // processing chain and out to whatever device is already connected - a
+    // knob turn is heard within one block, same as with a live mic input.
+    // All of these are message-thread calls; AudioTransportSource itself
+    // handles the handoff to the audio thread reading it in processBlock().
+    bool loadFileForPlayback (const juce::File& file);
+    void setFilePlaying (bool shouldPlay);
+    bool isFilePlaying() const noexcept { return transportSource.isPlaying(); }
+    double getPlaybackPositionSeconds() const { return transportSource.getCurrentPosition(); }
+    double getPlaybackLengthSeconds() const { return transportSource.getLengthInSeconds(); }
+
     /** Metering values, written by the audio thread and read by the UI. */
     struct MeterState
     {
@@ -87,6 +102,12 @@ private:
     // does the (comparatively expensive) file-based check instead.
     std::atomic<bool> trialBlocked { false };
     void updateTrialBlockedFlag() noexcept;
+
+    // --- standalone live file playback -----------------------------------------
+    juce::AudioFormatManager playbackFormatManager;
+    juce::TimeSliceThread readAheadThread { "Zinox File Playback" };
+    std::unique_ptr<juce::AudioFormatReaderSource> playbackReaderSource;
+    juce::AudioTransportSource transportSource;
 
     // --- cached parameter pointers (avoids string lookups per block) --------
     std::atomic<float>* pInput = nullptr;

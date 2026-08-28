@@ -37,6 +37,8 @@ private:
     void chooseImportFile();
     void chooseExportFile();
     void runExport (const juce::File& destFile);
+    void togglePlayback();
+    void updatePlayButton();
 
     void paintBackground (juce::Graphics&);
     void paintFooter (juce::Graphics&);
@@ -72,6 +74,7 @@ private:
     // --- standalone-only file import/export ----------------------------------
     std::unique_ptr<zx::FileDropZone> fileDropZone;
     std::unique_ptr<juce::TextButton> importButton;
+    std::unique_ptr<juce::TextButton> playButton;
     std::unique_ptr<juce::TextButton> exportButton;
     std::unique_ptr<juce::FileChooser> activeFileChooser;
     juce::File importedFile;

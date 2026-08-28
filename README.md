@@ -157,7 +157,7 @@ is much less effort than not.
 
 ---
 
-## Standalone: import & export
+## Standalone: import, live audition & export
 
 Only the Standalone build shows the bar across the top of the window — a VST3/AU
 instance running inside a DAW already owns the audio transport, so it doesn't need
@@ -165,21 +165,23 @@ one, and doesn't show one.
 
 - **Drop an audio file** onto the bar, or click **IMPORT**, to load a WAV / AIFF / MP3 /
   FLAC / OGG / M4A file.
-- Click **EXPORT** to bounce it through the plugin's *current* knob settings and save
-  the result as a new WAV file.
+- Click **PLAY** to loop it through the live processing chain and out to your actual
+  speakers. Turn any knob while it's playing and the change is audible within a single
+  audio block — the same `processBlock()` that would otherwise process microphone
+  input just reads from the file instead ([PluginProcessor.cpp](Source/PluginProcessor.cpp)),
+  via a `juce::AudioTransportSource` with its own background read-ahead thread, so disk
+  reads never happen on the audio thread. Click **STOP** to go back to live input.
+- Click **EXPORT** to bounce the imported file through the plugin's *current* knob
+  settings and save the result as a new WAV file.
 
 The export runs on a background thread ([Source/OfflineRenderer.cpp](Source/OfflineRenderer.cpp))
-against a throwaway second instance of the plugin loaded with a snapshot of the live
-one's parameters, so it can never disturb whatever you're doing live, and the rendered
-file always matches what you'd currently hear. It also compensates for the plugin's own
-reported latency (limiter look-ahead, the denoiser's analysis window, any oversampling)
-by feeding a little extra silence at the end and trimming the equivalent delay from the
-front, so the output file is sample-aligned with the input and exactly the same length.
-
-This is an offline bounce, not a live audition path — there's no "play the imported
-file through your speakers while you turn knobs" mode in this version. Adjust the
-sound using your DAW or microphone as the source, then Import + Export when you're
-happy with the settings.
+against a *second, throwaway* instance of the plugin loaded with a snapshot of the live
+one's parameters — entirely separate from the live-playback path above, so exporting
+never disturbs whatever you're auditioning, and the rendered file always matches what
+you'd currently hear. It also compensates for the plugin's own reported latency
+(limiter look-ahead, the denoiser's analysis window, any oversampling) by feeding a
+little extra silence at the end and trimming the equivalent delay from the front, so
+the output file is sample-aligned with the input and exactly the same length.
 
 ---
 

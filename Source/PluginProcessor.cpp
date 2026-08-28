@@ -14,6 +14,9 @@ ZinoxVocalsProcessor::ZinoxVocalsProcessor()
 {
     updateTrialBlockedFlag();
 
+    playbackFormatManager.registerBasicFormats();
+    readAheadThread.startThread();
+
     auto get = [this] (const char* id) { return apvts.getRawParameterValue (id); };
 
     pInput        = get (ParamID::input);
@@ -45,7 +48,11 @@ ZinoxVocalsProcessor::ZinoxVocalsProcessor()
     pMix          = get (ParamID::mix);
 }
 
-ZinoxVocalsProcessor::~ZinoxVocalsProcessor() = default;
+ZinoxVocalsProcessor::~ZinoxVocalsProcessor()
+{
+    transportSource.setSource (nullptr);
+    readAheadThread.stopThread (2000);
+}
 
 // ---------------------------------------------------------------------------
 
@@ -97,12 +104,16 @@ void ZinoxVocalsProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
     currentOsChoice = -1;
     reportedLatency = -1;
 
+    transportSource.prepareToPlay (samplesPerBlock, sampleRate);
+
     updateParameters();
     updateLatency();
 }
 
 void ZinoxVocalsProcessor::releaseResources()
 {
+    transportSource.releaseResources();
+
     denoiser.reset();
     toneStack.reset();
     deEsser.reset();
@@ -235,6 +246,16 @@ void ZinoxVocalsProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     if (numSamples == 0)
         return;
+
+    // Standalone-only: while a loaded file is playing, it substitutes for
+    // whatever the live input device would otherwise provide, so it runs
+    // through the exact same chain below and a knob turn is heard within
+    // one block, same as with a live mic input.
+    if (wrapperType == wrapperType_Standalone && transportSource.isPlaying())
+    {
+        juce::AudioSourceChannelInfo info (&buffer, 0, numSamples);
+        transportSource.getNextAudioBlock (info);
+    }
 
     updateParameters();
 
@@ -396,6 +417,40 @@ void ZinoxVocalsProcessor::refreshTrialStatus()
 void ZinoxVocalsProcessor::updateTrialBlockedFlag() noexcept
 {
     trialBlocked.store (! licenseInfo.valid && trialStatus.expired, std::memory_order_relaxed);
+}
+
+// ---------------------------------------------------------------------------
+
+bool ZinoxVocalsProcessor::loadFileForPlayback (const juce::File& file)
+{
+    std::unique_ptr<juce::AudioFormatReader> reader (playbackFormatManager.createReaderFor (file));
+
+    if (reader == nullptr)
+        return false;
+
+    const auto sourceSampleRate = reader->sampleRate;
+
+    auto newSource = std::make_unique<juce::AudioFormatReaderSource> (reader.release(), true);
+    newSource->setLooping (true);
+
+    // setSource() stops playback, resets position to 0, and swaps the
+    // pointer in a way that's safe against the audio thread mid-read - it's
+    // built for exactly this handoff. Passing the file's real sample rate
+    // lets it resample automatically if that differs from the device's.
+    transportSource.setSource (newSource.get(), 32768, &readAheadThread, sourceSampleRate);
+    playbackReaderSource = std::move (newSource);
+    return true;
+}
+
+void ZinoxVocalsProcessor::setFilePlaying (bool shouldPlay)
+{
+    if (playbackReaderSource == nullptr)
+        return;
+
+    if (shouldPlay)
+        transportSource.start();
+    else
+        transportSource.stop();
 }
 
 // ---------------------------------------------------------------------------

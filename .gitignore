@@ -1,6 +1,6 @@
 # Build output
 build/
-build_log.txt
+build_log*.txt
 Installer/Output/
 ci-artifacts/
 
