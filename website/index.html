@@ -848,6 +848,19 @@
 </div>
 
 <script>
+  // Inside a published Claude Artifact preview, this page is served alone with no
+  // sibling manual.html to link to (Artifacts inject a "/_f/..." base href) — point
+  // the Manual link at its own standalone Artifact instead in that context. On the
+  // real deployed site (Vercel etc.) manual.html is a real sibling file, so the
+  // relative link is left alone.
+  if (document.baseURI.indexOf('/_f/') !== -1) {
+    document.querySelectorAll('a[href="manual.html"]').forEach((a) => {
+      a.setAttribute('href', 'https://claude.ai/code/artifact/d346f253-089d-4324-a188-6c53eb8b41e3');
+      a.setAttribute('target', '_blank');
+      a.setAttribute('rel', 'noopener');
+    });
+  }
+
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
     const items = document.querySelectorAll('[data-reveal]');
     const io = new IntersectionObserver((entries) => {
