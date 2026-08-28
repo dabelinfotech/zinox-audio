@@ -88,6 +88,59 @@ step through the whole list.
 
 ---
 
+## Licensing
+
+Zinox Vocals ships with an offline, no-server license system: no internet connection,
+no phone-home, no third-party dependency. The plugin can *verify* a key but can never
+*create* one — that asymmetry is what makes it safe to ship.
+
+**How it works:** an RSA key pair is generated once. The private half never leaves your
+machine; the public half is compiled into the plugin. A small command-line tool
+(`ZinoxLicenseGen`, built alongside the plugin, never shipped to customers) uses the
+private key to sign a license blob containing the customer's name, email, and
+optionally a machine ID. The plugin verifies that signature locally using the embedded
+public key — no server round-trip required.
+
+**Getting started (do this once, before your first sale):**
+
+```powershell
+cd build\Release
+.\ZinoxLicenseGen.exe genkeys
+```
+
+This prints a public key. Paste it into `kPublicKey` in
+[Source/Licensing.cpp](Source/Licensing.cpp), then rebuild. Until you do this, the
+plugin ships in a fail-closed state — every key is rejected — rather than silently
+trusting an empty key.
+
+**Issuing a key after a sale:**
+
+```powershell
+.\ZinoxLicenseGen.exe issue "Customer Name" "customer@email.com"
+.\ZinoxLicenseGen.exe issue "Customer Name" "customer@email.com" <machineId>   # machine-locked
+```
+
+Send the printed blob to the customer; they paste it into the plugin's license dialog
+(click the **UNLICENSED** badge in the header). The machine ID shown in that dialog is
+what a customer sends you if you want to lock their key to one computer — omit it to
+issue a key that works anywhere.
+
+Self-check a key before sending it: `.\ZinoxLicenseGen.exe verify "<blob>"`.
+
+**Unlicensed behaviour:** rather than a time-limited trial (easily reset by reinstalling
+or changing the system clock), an unlicensed instance gets a brief, unmistakable gain
+dip every 45 seconds — sample-counted, not clock-based, so it can't be bypassed that
+way. A valid key stops it immediately and permanently (the key is saved and re-verified
+on every launch).
+
+**Reality check:** no offline scheme is unbreakable — a determined cracker can patch a
+binary regardless of the protection inside it. This raises the bar past casual copying
+and gives you a real paper trail (every key is tied to a name and email), which is what
+actually protects revenue for an indie plugin. If you outgrow it, the CMake/JUCE
+structure here doesn't preclude layering on a real activation server later.
+
+---
+
 ## Building
 
 ### Prerequisites

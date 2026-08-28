@@ -8,7 +8,8 @@ ZinoxVocalsProcessor::ZinoxVocalsProcessor()
                                 .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
                                 .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
       apvts (*this, nullptr, "ZINOX_VOCALS", createParameterLayout()),
-      presetManager (apvts)
+      presetManager (apvts),
+      licenseInfo (zx::License::loadSaved())
 {
     auto get = [this] (const char* id) { return apvts.getRawParameterValue (id); };
 
@@ -92,6 +93,10 @@ void ZinoxVocalsProcessor::prepareToPlay (double sampleRate, int samplesPerBlock
 
     currentOsChoice = -1;
     reportedLatency = -1;
+
+    samplesUntilNextNag = (juce::int64) (sampleRate * 45.0);
+    nagTotalSamples = (int) (sampleRate * 0.2);
+    nagSamplesRemaining = 0;
 
     updateParameters();
     updateLatency();
@@ -321,6 +326,10 @@ void ZinoxVocalsProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         }
     }
 
+    // 10. unlicensed reminder --------------------------------------------------
+    if (! licenseInfo.valid)
+        applyUnlicensedNag (buffer);
+
     // --- metering -----------------------------------------------------------
     const auto peakL = buffer.getMagnitude (0, 0, numSamples);
     const auto peakR = totalOut > 1 ? buffer.getMagnitude (1, 0, numSamples) : peakL;
@@ -354,6 +363,41 @@ void ZinoxVocalsProcessor::setStateInformation (const void* data, int sizeInByte
             auto tree = juce::ValueTree::fromXml (*xml);
             apvts.replaceState (tree);
             presetManager.setCurrentPresetName (tree.getProperty ("presetName", "Default").toString());
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+zx::License::Info ZinoxVocalsProcessor::activateLicense (const juce::String& licenseBlob)
+{
+    licenseInfo = zx::License::activate (licenseBlob);
+    return licenseInfo;
+}
+
+void ZinoxVocalsProcessor::applyUnlicensedNag (juce::AudioBuffer<float>& buffer)
+{
+    const auto numCh = buffer.getNumChannels();
+    const auto numSamples = buffer.getNumSamples();
+    constexpr float depth = 0.15f; // gain at the deepest point of the dip
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        if (nagSamplesRemaining <= 0 && --samplesUntilNextNag <= 0)
+        {
+            nagSamplesRemaining = nagTotalSamples;
+            samplesUntilNextNag = (juce::int64) (getSampleRate() * 45.0);
+        }
+
+        if (nagSamplesRemaining > 0)
+        {
+            const auto t = (float) (nagTotalSamples - nagSamplesRemaining) / (float) nagTotalSamples;
+            const auto env = 1.0f - (1.0f - depth) * std::sin (juce::MathConstants<float>::pi * t);
+
+            for (int ch = 0; ch < numCh; ++ch)
+                buffer.getWritePointer (ch)[i] *= env;
+
+            --nagSamplesRemaining;
         }
     }
 }

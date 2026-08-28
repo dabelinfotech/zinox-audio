@@ -77,6 +77,11 @@ void ZinoxVocalsEditor::buildHeader()
     bypassButton.onStateChange = [this] { repaint(); };
     addAndMakeVisible (bypassButton);
     bypassAttach = std::make_unique<ButtonAttach> (processor.getAPVTS(), ParamID::bypass, bypassButton);
+
+    licenseBadge.setTooltip ("View license status or activate Zinox Vocals.");
+    licenseBadge.onClick = [this] { showLicenseDialog(); };
+    addAndMakeVisible (licenseBadge);
+    updateLicenseBadge();
 }
 
 void ZinoxVocalsEditor::buildLeftColumn()
@@ -279,6 +284,79 @@ void ZinoxVocalsEditor::changeListenerCallback (juce::ChangeBroadcaster*)
 }
 
 // ===========================================================================
+//  Licensing
+// ===========================================================================
+
+void ZinoxVocalsEditor::updateLicenseBadge()
+{
+    const auto& info = processor.getLicenseInfo();
+
+    if (info.valid)
+    {
+        licenseBadge.setButtonText ("LICENSED");
+        licenseBadge.setColour (juce::TextButton::textColourOffId, textDim);
+    }
+    else
+    {
+        licenseBadge.setButtonText ("UNLICENSED");
+        licenseBadge.setColour (juce::TextButton::textColourOffId, meterRed);
+    }
+}
+
+void ZinoxVocalsEditor::showLicenseDialog()
+{
+    if (licenseWindow != nullptr)
+        return;
+
+    const auto& info = processor.getLicenseInfo();
+
+    const auto message = info.valid
+        ? "Licensed to " + info.name + " <" + info.email + ">.\n\n"
+          "Paste a different key below to replace it."
+        : juce::String ("This copy is unlicensed - unlicensed audio gets a brief gain dip every "
+                        "45 seconds as a reminder.\n\n"
+                        "Paste your license key below to activate it. If you were sent a "
+                        "machine-locked key, it must match the Machine ID shown below.");
+
+    licenseWindow = std::make_unique<juce::AlertWindow> ("ZINOX VOCALS LICENSE", message,
+                                                         juce::MessageBoxIconType::NoIcon, this);
+
+    licenseWindow->addTextEditor ("machineId", zx::License::getMachineId(), "This machine's ID:");
+    licenseWindow->addTextEditor ("key", "", "License key:");
+    licenseWindow->addButton ("ACTIVATE", 1, juce::KeyPress (juce::KeyPress::returnKey));
+    licenseWindow->addButton ("CLOSE", 0, juce::KeyPress (juce::KeyPress::escapeKey));
+
+    licenseWindow->centreAroundComponent (this, licenseWindow->getWidth(), licenseWindow->getHeight());
+    licenseWindow->setVisible (true);
+
+    licenseWindow->enterModalState (true, juce::ModalCallbackFunction::create (
+        [this] (int result)
+        {
+            if (licenseWindow != nullptr && result == 1)
+            {
+                const auto key = licenseWindow->getTextEditorContents ("key").trim();
+
+                if (key.isNotEmpty())
+                {
+                    const auto newInfo = processor.activateLicense (key);
+                    updateLicenseBadge();
+
+                    juce::AlertWindow::showMessageBoxAsync (
+                        newInfo.valid ? juce::MessageBoxIconType::InfoIcon
+                                     : juce::MessageBoxIconType::WarningIcon,
+                        newInfo.valid ? "Activated" : "Invalid Key",
+                        newInfo.valid
+                            ? "Thanks, " + newInfo.name + " - Zinox Vocals is now licensed on this machine."
+                            : "That key didn't verify. Double-check it was copied in full and "
+                              "that it matches this machine's ID.");
+                }
+            }
+
+            licenseWindow.reset();
+        }), false);
+}
+
+// ===========================================================================
 //  Timer — pull the meter values across from the audio thread
 // ===========================================================================
 
@@ -319,12 +397,14 @@ void ZinoxVocalsEditor::resized()
         applyScale (logo, h.removeFromLeft (170).withSizeKeepingCentre (170, 34));
 
         applyScale (bypassButton, h.removeFromRight (84).withSizeKeepingCentre (78, 26));
+        h.removeFromRight (6);
+        applyScale (licenseBadge, h.removeFromRight (100).withSizeKeepingCentre (94, 24));
         h.removeFromRight (10);
         titleArea = h.removeFromRight (150);
         h.removeFromRight (10);
 
         // Preset bar sits in the middle of whatever is left.
-        auto bar = h.withSizeKeepingCentre (juce::jmin (380, h.getWidth()), 30);
+        auto bar = h.withSizeKeepingCentre (juce::jmin (320, h.getWidth()), 30);
 
         applyScale (prevPresetButton, bar.removeFromLeft (30).reduced (1));
         bar.removeFromLeft (4);

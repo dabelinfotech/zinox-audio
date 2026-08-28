@@ -28,6 +28,8 @@ private:
 
     void refreshPresetList();
     void showSaveDialog();
+    void showLicenseDialog();
+    void updateLicenseBadge();
 
     void paintBackground (juce::Graphics&);
     void paintFooter (juce::Graphics&);
@@ -48,6 +50,9 @@ private:
     juce::TextButton bypassButton { "BYPASS" };
     std::unique_ptr<ButtonAttach> bypassAttach;
     std::unique_ptr<juce::AlertWindow> saveWindow;
+
+    juce::TextButton licenseBadge { "UNLICENSED" };
+    std::unique_ptr<juce::AlertWindow> licenseWindow;
 
     // --- left column --------------------------------------------------------
     zx::ZinoxKnob inputKnob   { "INPUT",    true };

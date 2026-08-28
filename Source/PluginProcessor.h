@@ -5,6 +5,7 @@
 
 #include "Parameters.h"
 #include "PresetManager.h"
+#include "Licensing.h"
 #include "DSP/Denoiser.h"
 #include "DSP/ToneStack.h"
 #include "DSP/DeEsser.h"
@@ -47,6 +48,11 @@ public:
     juce::AudioProcessorValueTreeState& getAPVTS() noexcept { return apvts; }
     zx::PresetManager& getPresetManager() noexcept { return presetManager; }
 
+    // --- licensing ------------------------------------------------------------
+    const zx::License::Info& getLicenseInfo() const noexcept { return licenseInfo; }
+    /** Verifies and, if valid, saves the key; updates getLicenseInfo() either way. */
+    zx::License::Info activateLicense (const juce::String& licenseBlob);
+
     /** Metering values, written by the audio thread and read by the UI. */
     struct MeterState
     {
@@ -67,6 +73,16 @@ private:
 
     juce::AudioProcessorValueTreeState apvts;
     zx::PresetManager presetManager;
+    zx::License::Info licenseInfo;
+
+    // Unlicensed builds get a brief, unmistakable gain dip every so often
+    // instead of silently degrading audio quality - if you hear it, you'll
+    // know exactly why. Sample-counted rather than clock-based so it can't
+    // be reset by changing the system date.
+    juce::int64 samplesUntilNextNag = 0;
+    int nagSamplesRemaining = 0;
+    int nagTotalSamples = 0;
+    void applyUnlicensedNag (juce::AudioBuffer<float>& buffer);
 
     // --- cached parameter pointers (avoids string lookups per block) --------
     std::atomic<float>* pInput = nullptr;

@@ -60,6 +60,7 @@ target_sources(ZinoxVocals PRIVATE
     Source/PluginEditor.cpp
     Source/Parameters.cpp
     Source/PresetManager.cpp
+    Source/Licensing.cpp
     Source/GUI/ZinoxLookAndFeel.cpp
     Source/GUI/Widgets.cpp
 )
@@ -78,8 +79,17 @@ target_compile_definitions(ZinoxVocals PUBLIC
 target_link_libraries(ZinoxVocals PRIVATE
     juce::juce_audio_utils
     juce::juce_dsp
+    juce::juce_cryptography
 PUBLIC
     juce::juce_recommended_config_flags
     juce::juce_recommended_lto_flags
     juce::juce_recommended_warning_flags
 )
+
+# ---------------------------------------------------------------------------
+# License key generator - a small internal tool, not shipped to customers.
+# Run it from the build directory: ZinoxLicenseGen genkeys / issue ...
+# See Source/Tools/LicenseKeyGen.cpp for details.
+# ---------------------------------------------------------------------------
+add_executable(ZinoxLicenseGen Source/Tools/LicenseKeyGen.cpp Source/Licensing.cpp)
+target_link_libraries(ZinoxLicenseGen PRIVATE juce::juce_core juce::juce_cryptography)

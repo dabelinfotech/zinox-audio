@@ -2,6 +2,10 @@
 build/
 build_log.txt
 Installer/Output/
+ci-artifacts/
+
+# License keys - NEVER commit the private key. See Source/Tools/LicenseKeyGen.cpp
+Licensing/
 
 # JUCE-generated
 JuceLibraryCode/
