@@ -420,6 +420,9 @@
     display:none;
   }
   .modal-status.show{ display:block; }
+  #trialModalSuccess{ padding:28px 0 8px; }
+  #trialModalSuccess h2{ font-size:clamp(1.5rem, 4vw, 2.1rem); }
+  .modal-success-sub{ margin-top:16px; font-size:1rem; color:var(--ink-muted); }
 
   /* ---------- FOOTER ---------- */
   footer{ border-top:1px solid var(--line); padding:48px 0; }
@@ -802,24 +805,32 @@
 <!-- Trial signup modal. Wired to Web3Forms (web3forms.com — free, no account,
      just enter your email there to get an access key). Replace the two
      REPLACE_WITH_* values below: the access key, and the direct download URL
-     to redirect to after signup (e.g. a GitHub Release asset link once the
+     that gets emailed to the person (e.g. a GitHub Release asset link once the
      Windows/macOS trial installers are published somewhere public). -->
 <div class="modal-backdrop" id="trialModalBackdrop" hidden>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="trialModalTitle">
     <button type="button" class="modal-close" id="trialModalClose" aria-label="Close">&times;</button>
-    <p class="eyebrow" style="justify-content:center">No iLok, no dongle</p>
-    <h2 id="trialModalTitle">Unlock Your Free Trial<br>For <span class="grad-text">Zinox Vocals</span></h2>
-    <p class="modal-days">7-Day Free Trial</p>
-    <form class="trial-form" id="trialForm" action="https://api.web3forms.com/submit" method="POST">
-      <input type="hidden" name="access_key" value="REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY">
-      <input type="hidden" name="subject" value="New Zinox Vocals trial request">
-      <input type="hidden" name="redirect" value="REPLACE_WITH_YOUR_TRIAL_DOWNLOAD_URL">
-      <input type="text" name="name" placeholder="First Name" autocomplete="given-name" required>
-      <input type="email" name="email" placeholder="Your Email" autocomplete="email" required>
-      <button type="submit" class="btn btn-primary modal-submit">Download Now</button>
-      <p class="modal-status" id="trialFormStatus" role="status"></p>
-    </form>
-    <p class="modal-fine">By signing up you agree to our <a href="#">Terms of Service</a>.</p>
+
+    <div id="trialModalBody">
+      <p class="eyebrow" style="justify-content:center">No iLok, no dongle</p>
+      <h2 id="trialModalTitle">Unlock Your Free Trial<br>For <span class="grad-text">Zinox Vocals</span></h2>
+      <p class="modal-days">7-Day Free Trial</p>
+      <form class="trial-form" id="trialForm" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="REPLACE_WITH_YOUR_WEB3FORMS_ACCESS_KEY">
+        <input type="hidden" name="subject" value="New Zinox Vocals trial request">
+        <input type="hidden" name="redirect" value="REPLACE_WITH_YOUR_TRIAL_DOWNLOAD_URL">
+        <input type="text" name="name" placeholder="First Name" autocomplete="given-name" required>
+        <input type="email" name="email" placeholder="Your Email" autocomplete="email" required>
+        <button type="submit" class="btn btn-primary modal-submit">Download Now</button>
+        <p class="modal-status" id="trialFormStatus" role="status"></p>
+      </form>
+      <p class="modal-fine">By signing up you agree to our <a href="#">Terms of Service</a>.</p>
+    </div>
+
+    <div id="trialModalSuccess" hidden>
+      <h2>Your Download Is Ready!</h2>
+      <p class="modal-success-sub">An email has been sent to you with download links.</p>
+    </div>
   </div>
 </div>
 
@@ -836,10 +847,19 @@
 
   const trialBackdrop = document.getElementById('trialModalBackdrop');
   const trialClose = document.getElementById('trialModalClose');
+  const trialModalBody = document.getElementById('trialModalBody');
+  const trialModalSuccess = document.getElementById('trialModalSuccess');
+  const trialForm = document.getElementById('trialForm');
+  const trialFormStatus = document.getElementById('trialFormStatus');
   let trialLastFocused = null;
 
   function openTrialModal() {
     trialLastFocused = document.activeElement;
+    trialModalBody.hidden = false;
+    trialModalSuccess.hidden = true;
+    trialFormStatus.textContent = '';
+    trialFormStatus.classList.remove('show');
+    trialForm.reset();
     trialBackdrop.hidden = false;
     const firstInput = trialBackdrop.querySelector('input');
     if (firstInput) firstInput.focus();
@@ -848,6 +868,34 @@
     trialBackdrop.hidden = true;
     if (trialLastFocused) trialLastFocused.focus();
   }
+
+  trialForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = trialForm.querySelector('.modal-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    trialFormStatus.classList.remove('show');
+
+    try {
+      const res = await fetch(trialForm.action, {
+        method: 'POST',
+        body: new FormData(trialForm),
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.message || 'Submission failed');
+      }
+      trialModalBody.hidden = true;
+      trialModalSuccess.hidden = false;
+    } catch (err) {
+      trialFormStatus.textContent = "Couldn't send that — check your email and try again.";
+      trialFormStatus.classList.add('show');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Download Now';
+    }
+  });
 
   document.querySelectorAll('[data-trial-trigger]').forEach(btn => {
     btn.addEventListener('click', openTrialModal);
