@@ -32,7 +32,7 @@ Input trim
 
 | Control      | What it does |
 |--------------|--------------|
-| **Input**    | ±24 dB trim into the strip. Set this so Control sees a healthy signal. |
+| **Input**    | ±36 dB trim into the strip. Set this so Control sees a healthy signal. |
 | **Denoise**  | Adaptive spectral noise reduction. Runs an STFT that continuously learns the noise floor in every frequency bin during quiet passages (a fast-fall, slow-rise tracker, so speech is never mistaken for noise), then subtracts it back out with a spectral safety floor plus frequency- and time-axis smoothing to avoid "musical noise" artifacts. This is a classical DSP denoiser, not a trained neural network — it excels at steady noise (hiss, hum, fans, room tone) but won't isolate one-off transient noises the way a model trained specifically for that can. |
 | **Low Cut**  | 24 dB/oct high-pass, 20 Hz – 500 Hz. Fully anticlockwise is **OFF**. |
 | **High Cut** | 24 dB/oct low-pass, 2 kHz – 22 kHz. Fully clockwise is **OFF**. |
@@ -41,11 +41,11 @@ Input trim
 
 | Control      | What it does |
 |--------------|--------------|
-| **Low**      | ±12 dB. The **PEAK / SHELF** lever switches the band's shape. |
+| **Low**      | ±18 dB. The **PEAK / SHELF** lever switches the band's shape. |
 | **Low Freq** | 40 Hz – 320 Hz corner/centre for the low band. |
-| **Mid**      | ±12 dB. |
+| **Mid**      | ±18 dB. |
 | **Tone**     | Sweeps the mid band from body (350 Hz) up to bite (5 kHz). |
-| **High**     | ±12 dB, with three voicings: **AIR** (11 kHz shelf), **BRIGHT** (6.5 kHz shelf), **PRESENCE** (3.8 kHz bell). |
+| **High**     | ±18 dB, with three voicings: **AIR** (11 kHz shelf), **BRIGHT** (6.5 kHz shelf), **PRESENCE** (3.8 kHz bell). |
 | **De-Ess**   | Split-band sibilance control. Threshold and ratio move together, so one knob covers gentle polish through to hard taming. The bar beside it shows how hard it's working. |
 | **Freq**     | De-esser crossover, 3 kHz – 12 kHz. |
 
@@ -57,7 +57,7 @@ Input trim
 | **Push**      | Parallel density — a hard, fast compressor with drive blended against the dry signal. It raises the floor without flattening the transients Control is shaping. **PUNCH** keeps consonants intact, **FAT** maximises sustain, **TIGHT** is aggressive and controlled. |
 | **-3 / -6 / -9** | A hard ceiling on how much gain reduction that stage may apply. This is what keeps the compressors musical when you push the amount knob: the detector works harder, but the gain reduction never exceeds the range you selected. |
 | **Saturate**  | Harmonic saturation, running inside the oversampled section. **RICH** (asymmetric tanh, forward), **WARM** (soft cubic, rounded), **TAPE** (level-dependent squash + HF loss), **TUBE** (heavy even harmonics). Output is level-compensated, so the knob changes character rather than loudness. |
-| **Output**    | ±24 dB trim, applied *before* the limiter. |
+| **Output**    | ±36 dB trim, applied *before* the limiter. |
 | **Mix**       | Dry/wet across the whole strip. |
 
 ### Right column

@@ -54,9 +54,14 @@ APVTS::ParameterLayout createParameterLayout()
     // stays at 1 unless a parameter's meaning actually changes.
     const int ver = 1;
 
+    // Wider ranges give the same knob position a bigger, more noticeable
+    // dB swing. Versioned separately since it changes what an existing
+    // automation lane at a given normalised position actually means.
+    const int verWideGain = 2;
+
     // ---- input stage -------------------------------------------------------
-    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::input, ver }, "Input",
-                                         juce::NormalisableRange<float> { -24.0f, 24.0f, 0.1f }, 0.0f,
+    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::input, verWideGain }, "Input",
+                                         juce::NormalisableRange<float> { -36.0f, 36.0f, 0.1f }, 0.0f,
                                          juce::AudioParameterFloatAttributes().withStringFromValueFunction (dbText)));
 
     layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::denoise, ver }, "Denoise",
@@ -74,8 +79,8 @@ APVTS::ParameterLayout createParameterLayout()
                                              [] (float x, int) { return x >= 21500.0f ? juce::String ("OFF") : hzText (x, 0); })));
 
     // ---- tone stage --------------------------------------------------------
-    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::lowGain, ver }, "Low",
-                                         juce::NormalisableRange<float> { -12.0f, 12.0f, 0.1f }, 0.0f,
+    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::lowGain, verWideGain }, "Low",
+                                         juce::NormalisableRange<float> { -18.0f, 18.0f, 0.1f }, 0.0f,
                                          juce::AudioParameterFloatAttributes().withStringFromValueFunction (dbText)));
 
     layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::lowFreq, ver }, "Low Freq",
@@ -85,8 +90,8 @@ APVTS::ParameterLayout createParameterLayout()
     layout.add (std::make_unique<Choice> (juce::ParameterID { ParamID::lowShape, ver }, "Low Shape",
                                           Choices::lowShape, 1));
 
-    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::midGain, ver }, "Mid",
-                                         juce::NormalisableRange<float> { -12.0f, 12.0f, 0.1f }, 0.0f,
+    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::midGain, verWideGain }, "Mid",
+                                         juce::NormalisableRange<float> { -18.0f, 18.0f, 0.1f }, 0.0f,
                                          juce::AudioParameterFloatAttributes().withStringFromValueFunction (dbText)));
 
     layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::midTone, ver }, "Tone",
@@ -98,8 +103,8 @@ APVTS::ParameterLayout createParameterLayout()
                                                  return hzText (f, 0);
                                              })));
 
-    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::highGain, ver }, "High",
-                                         juce::NormalisableRange<float> { -12.0f, 12.0f, 0.1f }, 0.0f,
+    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::highGain, verWideGain }, "High",
+                                         juce::NormalisableRange<float> { -18.0f, 18.0f, 0.1f }, 0.0f,
                                          juce::AudioParameterFloatAttributes().withStringFromValueFunction (dbText)));
 
     layout.add (std::make_unique<Choice> (juce::ParameterID { ParamID::highMode, ver }, "High Mode",
@@ -143,8 +148,8 @@ APVTS::ParameterLayout createParameterLayout()
                                           Choices::satMode, 0));
 
     // ---- output ------------------------------------------------------------
-    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::output, ver }, "Output",
-                                         juce::NormalisableRange<float> { -24.0f, 24.0f, 0.1f }, 0.0f,
+    layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::output, verWideGain }, "Output",
+                                         juce::NormalisableRange<float> { -36.0f, 36.0f, 0.1f }, 0.0f,
                                          juce::AudioParameterFloatAttributes().withStringFromValueFunction (dbText)));
 
     layout.add (std::make_unique<Float> (juce::ParameterID { ParamID::limit, ver }, "Limit",
