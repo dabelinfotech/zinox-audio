@@ -3,7 +3,7 @@
 ; build (see ..\build.ps1) into a single distributable setup executable.
 
 #define MyAppName "Zinox Vocals"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Zinox Audio"
 #define MyAppURL "https://zinoxaudio.com"
 #define MyAppExeName "Zinox Vocals.exe"
