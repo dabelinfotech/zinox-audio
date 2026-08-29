@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Zinox Vocals</title>
+<title>ZinoxAudio — Zinox Vocals</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -115,6 +115,26 @@
   nav.links{ display:flex; align-items:center; gap:28px; }
   nav.links a{ font-size:0.9rem; font-weight:500; text-decoration:none; color:var(--ink-muted); }
   nav.links a:hover{ color:var(--ink); }
+
+  .nav-dropdown{ position:relative; }
+  .nav-dropdown summary{
+    display:flex; align-items:center; gap:6px;
+    font-size:0.9rem; font-weight:500; color:var(--ink-muted);
+    cursor:pointer; list-style:none;
+  }
+  .nav-dropdown summary::-webkit-details-marker{ display:none; }
+  .nav-dropdown summary::after{ content:"▾"; font-size:0.65em; color:var(--ink-muted); }
+  .nav-dropdown:hover summary, .nav-dropdown[open] summary{ color:var(--ink); }
+  .nav-dropdown .dropdown-menu{
+    position:absolute; top:calc(100% + 14px); left:0;
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    box-shadow:var(--shadow); padding:6px; min-width:180px; z-index:60;
+  }
+  .nav-dropdown .dropdown-menu a{
+    display:block; padding:8px 12px; border-radius:8px;
+    font-size:0.88rem; font-weight:500; color:var(--ink-muted); text-decoration:none;
+  }
+  .nav-dropdown .dropdown-menu a:hover{ background:var(--surface-2); color:var(--ink); }
   .btn{
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
     font-family:'IBM Plex Sans', sans-serif;
@@ -462,7 +482,12 @@
       <a href="#features">Features</a>
       <a href="#presets">Presets</a>
       <a href="#pricing">Pricing</a>
-      <a href="manual.html">Manual</a>
+      <details class="nav-dropdown">
+        <summary>Plugins</summary>
+        <div class="dropdown-menu">
+          <a href="plugins.html">Zinox Vocals</a>
+        </div>
+      </details>
     </nav>
     <a href="#pricing" class="btn btn-primary">Get Zinox Vocals</a>
   </div>
@@ -797,7 +822,7 @@
         <a href="#chain">Signal Chain</a>
         <a href="#presets">Presets</a>
         <a href="#pricing">Pricing</a>
-        <a href="manual.html">Manual</a>
+        <a href="plugins.html">Plugins</a>
         <a href="terms.html">Terms of Service</a>
         <a href="privacy.html">Privacy Notice</a>
         <a href="refund.html">Refund Policy</a>
@@ -851,17 +876,30 @@
 
 <script>
   // Inside a published Claude Artifact preview, this page is served alone with no
-  // sibling manual.html to link to (Artifacts inject a "/_f/..." base href) — point
-  // the Manual link at its own standalone Artifact instead in that context. On the
-  // real deployed site (Vercel etc.) manual.html is a real sibling file, so the
+  // sibling plugins.html to link to (Artifacts inject a "/_f/..." base href) — point
+  // the Plugins link at its own standalone Artifact instead in that context. On the
+  // real deployed site (Vercel etc.) plugins.html is a real sibling file, so the
   // relative link is left alone.
   if (document.baseURI.indexOf('/_f/') !== -1) {
-    document.querySelectorAll('a[href="manual.html"]').forEach((a) => {
+    document.querySelectorAll('a[href="plugins.html"]').forEach((a) => {
       a.setAttribute('href', 'https://claude.ai/code/artifact/d346f253-089d-4324-a188-6c53eb8b41e3');
       a.setAttribute('target', '_blank');
       a.setAttribute('rel', 'noopener');
     });
   }
+
+  document.querySelectorAll('.nav-dropdown').forEach((dd) => {
+    dd.addEventListener('toggle', () => {
+      if (dd.open) {
+        document.querySelectorAll('.nav-dropdown[open]').forEach((other) => { if (other !== dd) other.open = false; });
+      }
+    });
+  });
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.nav-dropdown[open]').forEach((dd) => {
+      if (!dd.contains(e.target)) dd.open = false;
+    });
+  });
 
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
     const items = document.querySelectorAll('[data-reveal]');
