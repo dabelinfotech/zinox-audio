@@ -16,3 +16,8 @@ JuceLibraryCode/
 *.user
 .DS_Store
 Thumbs.db
+
+# Admin backend (website/api)
+node_modules/
+.vercel/
+website/node_modules/

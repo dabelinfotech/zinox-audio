@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZinoxAudio Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14151B; --surface:#1B1D25; --surface-2:#20222C; --line:#3A3E4C;
+    --ink:#F2F1EB; --ink-muted:#9A9CAC; --accent:#FFC72C; --accent-hover:#FFE27A;
+    --accent-ink:#17120A; --danger:#E0644A; --radius:8px;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 18px 40px -18px rgba(0,0,0,.55);
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:"IBM Plex Sans",-apple-system,"Segoe UI",sans-serif; font-size:15px; line-height:1.5; }
+  h1,h2{ font-family:"Unbounded","Arial Black",sans-serif; margin:0; }
+  .mono{ font-family:"IBM Plex Mono",monospace; }
+  a{ color:var(--accent); }
+  button, input, select{ font-family:inherit; font-size:inherit; }
+
+  .top{ display:flex; align-items:center; justify-content:space-between; padding:14px 24px; border-bottom:1px solid var(--line); }
+  .brand{ font-family:"Unbounded",sans-serif; font-weight:800; font-size:1.05rem; }
+  .brand span{ color:var(--accent); }
+
+  .btn{ display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:6px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); cursor:pointer; }
+  .btn:hover{ border-color:var(--accent); }
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+  .btn-primary:hover{ background:var(--accent-hover); }
+  .btn-danger{ color:var(--danger); border-color:var(--danger); background:transparent; }
+  .btn-danger:hover{ background:var(--danger); color:#fff; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  #loginScreen{ max-width:340px; margin:14vh auto; padding:0 20px; }
+  #loginScreen input{ width:100%; padding:12px 14px; border-radius:6px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); margin:14px 0; }
+  #loginError{ color:var(--danger); font-size:.85rem; min-height:1.2em; }
+
+  #dashboard{ display:none; }
+  .tabs{ display:flex; gap:4px; padding:0 24px; border-bottom:1px solid var(--line); overflow-x:auto; }
+  .tab{ padding:12px 16px; cursor:pointer; color:var(--ink-muted); border-bottom:2px solid transparent; white-space:nowrap; }
+  .tab.active{ color:var(--ink); border-bottom-color:var(--accent); }
+  .panel{ display:none; padding:24px; max-width:1200px; margin:0 auto; }
+  .panel.active{ display:block; }
+
+  table{ width:100%; border-collapse:collapse; margin-top:16px; font-size:.88rem; }
+  th{ text-align:left; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-muted); padding:8px 12px 8px 0; border-bottom:1px solid var(--line); white-space:nowrap; }
+  td{ padding:10px 12px 10px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td{ border-bottom:none; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-bottom:20px; box-shadow:var(--shadow); }
+  .card h3{ font-family:"IBM Plex Sans",sans-serif; font-size:1rem; font-weight:700; margin:0 0 14px; }
+  .form-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+  .form-row input, .form-row select{ padding:9px 12px; border-radius:6px; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); flex:1; min-width:140px; }
+  .status-msg{ font-size:.82rem; color:var(--ink-muted); margin-top:8px; min-height:1.2em; }
+  .status-msg.error{ color:var(--danger); }
+  .badge{ font-family:"IBM Plex Mono",monospace; font-size:.7rem; padding:2px 8px; border-radius:4px; border:1px solid var(--line); }
+  .badge.current{ color:var(--accent); border-color:var(--accent); }
+  .badge.revoked{ color:var(--danger); border-color:var(--danger); }
+  .empty{ color:var(--ink-muted); font-size:.88rem; padding:20px 0; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <h1 class="brand">ZINOX<span>AUDIO</span></h1>
+  <p class="mono" style="color:var(--ink-muted);font-size:.85rem;">Admin sign-in</p>
+  <form id="loginForm">
+    <input type="password" id="passwordInput" placeholder="Admin password" autocomplete="current-password" required>
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Sign In</button>
+    <p id="loginError"></p>
+  </form>
+</div>
+
+<div id="dashboard">
+  <div class="top">
+    <span class="brand">ZINOX<span>AUDIO</span> <span class="mono" style="color:var(--ink-muted);font-size:.8rem;font-weight:400;">Admin</span></span>
+    <button class="btn" id="logoutBtn">Log out</button>
+  </div>
+
+  <nav class="tabs">
+    <div class="tab active" data-tab="plugins">Plugins</div>
+    <div class="tab" data-tab="files">Files</div>
+    <div class="tab" data-tab="subscribers">Subscribers</div>
+    <div class="tab" data-tab="tokens">License Tokens</div>
+    <div class="tab" data-tab="downloads">Download / Usage Log</div>
+  </nav>
+
+  <section class="panel active" id="panel-plugins">
+    <div class="card">
+      <h3>Add a plugin</h3>
+      <div class="form-row">
+        <input id="p-slug" placeholder="slug (e.g. helium)">
+        <input id="p-name" placeholder="Name (e.g. Helium)">
+        <input id="p-monthly" placeholder="Monthly price, cents (800)" type="number">
+        <input id="p-yearly" placeholder="Yearly price, cents (6000)" type="number">
+        <button class="btn btn-primary" id="p-add">Add</button>
+      </div>
+      <div class="form-row">
+        <input id="p-desc" placeholder="Description" style="flex:3;">
+      </div>
+      <p class="status-msg" id="p-status"></p>
+    </div>
+    <table id="pluginsTable"><thead><tr><th>Slug</th><th>Name</th><th>Description</th><th>Monthly</th><th>Yearly</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="panel" id="panel-files">
+    <div class="card">
+      <h3>Upload an installer</h3>
+      <div class="form-row">
+        <select id="f-plugin"></select>
+        <select id="f-platform">
+          <option value="windows">Windows (.exe)</option>
+          <option value="macos">macOS (.pkg)</option>
+        </select>
+        <input id="f-version" placeholder="Version (e.g. 1.0.1)">
+        <input id="f-file" type="file">
+        <button class="btn btn-primary" id="f-upload">Upload</button>
+      </div>
+      <p class="status-msg" id="f-status">Uploads go straight to Blob storage from your browser - large installers are fine. Setting a new file for the same plugin+platform automatically retires the previous one (it stays in the list below, just no longer "current").</p>
+    </div>
+    <table id="filesTable"><thead><tr><th>Plugin</th><th>Platform</th><th>Version</th><th>Size</th><th>Uploaded</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="panel" id="panel-subscribers">
+    <table id="subscribersTable"><thead><tr><th>Email</th><th>Name</th><th>Joined</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="panel" id="panel-tokens">
+    <div class="card">
+      <h3>Log an issued license key</h3>
+      <p class="status-msg">Run <span class="mono">HeliumLicenseGen issue "Name" "email"</span> (or ZinoxLicenseGen) locally first - the signing key never touches this server. Paste the result here just to keep a record.</p>
+      <div class="form-row">
+        <select id="t-plugin"></select>
+        <input id="t-email" placeholder="Customer email">
+        <input id="t-machine" placeholder="Machine ID (optional)">
+      </div>
+      <div class="form-row">
+        <input id="t-key" placeholder="Full key blob" style="flex:3;">
+        <button class="btn btn-primary" id="t-add">Log key</button>
+      </div>
+      <p class="status-msg" id="t-status"></p>
+    </div>
+    <table id="tokensTable"><thead><tr><th>Plugin</th><th>Customer</th><th>Key (truncated)</th><th>Issued</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
+
+  <section class="panel" id="panel-downloads">
+    <table id="downloadsTable"><thead><tr><th>Plugin</th><th>Platform</th><th>Subscriber</th><th>When</th></tr></thead><tbody></tbody></table>
+  </section>
+</div>
+
+<script type="module">
+  const api = (path, opts = {}) => fetch(`/api${path}`, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+    credentials: 'same-origin',
+  }).then(async (r) => {
+    if (r.status === 204) return null;
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || `Request failed (${r.status})`);
+    return data;
+  });
+
+  const loginScreen = document.getElementById('loginScreen');
+  const dashboard = document.getElementById('dashboard');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+
+  let pluginsCache = [];
+
+  async function checkAuth() {
+    const { authenticated } = await api('/auth/status');
+    if (authenticated) {
+      loginScreen.style.display = 'none';
+      dashboard.style.display = 'block';
+      await loadAll();
+    } else {
+      loginScreen.style.display = 'block';
+      dashboard.style.display = 'none';
+    }
+  }
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.textContent = '';
+    try {
+      await api('/auth/login', { method: 'POST', body: JSON.stringify({ password: document.getElementById('passwordInput').value }) });
+      document.getElementById('passwordInput').value = '';
+      await checkAuth();
+    } catch (err) {
+      loginError.textContent = err.message;
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await api('/auth/logout', { method: 'POST' });
+    checkAuth();
+  });
+
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+    });
+  });
+
+  function fmtDate(iso) { return new Date(iso).toLocaleString(); }
+  function fmtBytes(n) {
+    if (!n) return '—';
+    const mb = n / (1024 * 1024);
+    return `${mb.toFixed(1)} MB`;
+  }
+  function fmtCents(c) { return c == null ? '—' : `$${(c / 100).toFixed(2)}`; }
+
+  async function loadAll() {
+    await loadPlugins();
+    await Promise.all([loadFiles(), loadSubscribers(), loadTokens(), loadDownloads()]);
+  }
+
+  async function loadPlugins() {
+    pluginsCache = await api('/plugins');
+    const tbody = document.querySelector('#pluginsTable tbody');
+    tbody.innerHTML = pluginsCache.map((p) => `
+      <tr>
+        <td class="mono">${p.slug}</td>
+        <td>${p.name}</td>
+        <td>${p.description || ''}</td>
+        <td>${fmtCents(p.price_monthly_cents)}</td>
+        <td>${fmtCents(p.price_yearly_cents)}</td>
+        <td><button class="btn btn-danger" data-del-plugin="${p.id}">Delete</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="6" class="empty">No plugins yet.</td></tr>';
+
+    tbody.querySelectorAll('[data-del-plugin]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this plugin? This also removes its files, tokens, and download history.')) return;
+        await api(`/plugins/${btn.dataset.delPlugin}`, { method: 'DELETE' });
+        await loadAll();
+      });
+    });
+
+    const selects = [document.getElementById('f-plugin'), document.getElementById('t-plugin')];
+    for (const sel of selects) {
+      sel.innerHTML = pluginsCache.map((p) => `<option value="${p.slug}">${p.name}</option>`).join('');
+    }
+  }
+
+  document.getElementById('p-add').addEventListener('click', async () => {
+    const statusEl = document.getElementById('p-status');
+    statusEl.classList.remove('error');
+    try {
+      await api('/plugins', {
+        method: 'POST',
+        body: JSON.stringify({
+          slug: document.getElementById('p-slug').value.trim(),
+          name: document.getElementById('p-name').value.trim(),
+          description: document.getElementById('p-desc').value.trim(),
+          priceMonthlyCents: Number(document.getElementById('p-monthly').value) || null,
+          priceYearlyCents: Number(document.getElementById('p-yearly').value) || null,
+        }),
+      });
+      ['p-slug', 'p-name', 'p-desc', 'p-monthly', 'p-yearly'].forEach((id) => (document.getElementById(id).value = ''));
+      statusEl.textContent = 'Added.';
+      await loadPlugins();
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.classList.add('error');
+    }
+  });
+
+  async function loadFiles() {
+    const files = await api('/files');
+    const tbody = document.querySelector('#filesTable tbody');
+    tbody.innerHTML = files.map((f) => `
+      <tr>
+        <td>${f.plugin_name}</td>
+        <td>${f.platform}</td>
+        <td class="mono">${f.version}</td>
+        <td>${fmtBytes(f.size_bytes)}</td>
+        <td>${fmtDate(f.uploaded_at)}</td>
+        <td>${f.is_current ? '<span class="badge current">current</span>' : '<span class="badge">retired</span>'}</td>
+        <td><button class="btn btn-danger" data-del-file="${f.id}">Delete</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="7" class="empty">No files uploaded yet.</td></tr>';
+
+    tbody.querySelectorAll('[data-del-file]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this file permanently?')) return;
+        await api(`/files/${btn.dataset.delFile}`, { method: 'DELETE' });
+        await loadFiles();
+      });
+    });
+  }
+
+  document.getElementById('f-upload').addEventListener('click', async () => {
+    const statusEl = document.getElementById('f-status');
+    const fileInput = document.getElementById('f-file');
+    const file = fileInput.files[0];
+    const version = document.getElementById('f-version').value.trim();
+    const pluginSlug = document.getElementById('f-plugin').value;
+    const platform = document.getElementById('f-platform').value;
+
+    if (!file || !version) {
+      statusEl.textContent = 'Choose a file and enter a version first.';
+      statusEl.classList.add('error');
+      return;
+    }
+
+    statusEl.classList.remove('error');
+    statusEl.textContent = 'Uploading…';
+    try {
+      const { upload } = await import('https://esm.sh/@vercel/blob@0.27.1/client');
+      await upload(file.name, file, {
+        access: 'public',
+        handleUploadUrl: '/api/files/upload-token',
+        clientPayload: JSON.stringify({ pluginSlug, platform, version }),
+      });
+      statusEl.textContent = 'Uploaded. It can take a few seconds to appear below.';
+      fileInput.value = '';
+      document.getElementById('f-version').value = '';
+      setTimeout(loadFiles, 2000);
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.classList.add('error');
+    }
+  });
+
+  async function loadSubscribers() {
+    const subs = await api('/subscribers');
+    const tbody = document.querySelector('#subscribersTable tbody');
+    tbody.innerHTML = subs.map((s) => `
+      <tr>
+        <td>${s.email}</td>
+        <td>${s.name || ''}</td>
+        <td>${fmtDate(s.created_at)}</td>
+        <td><button class="btn btn-danger" data-del-sub="${s.id}">Delete</button></td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="empty">No subscribers yet.</td></tr>';
+
+    tbody.querySelectorAll('[data-del-sub]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this subscriber?')) return;
+        await api(`/subscribers/${btn.dataset.delSub}`, { method: 'DELETE' });
+        await loadSubscribers();
+      });
+    });
+  }
+
+  async function loadTokens() {
+    const tokens = await api('/tokens');
+    const tbody = document.querySelector('#tokensTable tbody');
+    tbody.innerHTML = tokens.map((t) => `
+      <tr>
+        <td>${t.plugin_name}</td>
+        <td>${t.subscriber_email || '—'}</td>
+        <td class="mono" title="${t.key_blob}">${t.key_blob.slice(0, 24)}…</td>
+        <td>${fmtDate(t.issued_at)}</td>
+        <td>${t.revoked ? '<span class="badge revoked">revoked</span>' : '<span class="badge current">active</span>'}</td>
+        <td>
+          <button class="btn" data-toggle-token="${t.id}" data-revoked="${t.revoked}">${t.revoked ? 'Restore' : 'Revoke'}</button>
+          <button class="btn btn-danger" data-del-token="${t.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="6" class="empty">No license keys logged yet.</td></tr>';
+
+    tbody.querySelectorAll('[data-toggle-token]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        await api(`/tokens/${btn.dataset.toggleToken}`, { method: 'PATCH', body: JSON.stringify({ revoked: btn.dataset.revoked !== 'true' }) });
+        await loadTokens();
+      });
+    });
+    tbody.querySelectorAll('[data-del-token]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this token record?')) return;
+        await api(`/tokens/${btn.dataset.delToken}`, { method: 'DELETE' });
+        await loadTokens();
+      });
+    });
+  }
+
+  document.getElementById('t-add').addEventListener('click', async () => {
+    const statusEl = document.getElementById('t-status');
+    statusEl.classList.remove('error');
+    try {
+      await api('/tokens', {
+        method: 'POST',
+        body: JSON.stringify({
+          pluginSlug: document.getElementById('t-plugin').value,
+          subscriberEmail: document.getElementById('t-email').value.trim(),
+          machineId: document.getElementById('t-machine').value.trim(),
+          keyBlob: document.getElementById('t-key').value.trim(),
+        }),
+      });
+      ['t-email', 't-machine', 't-key'].forEach((id) => (document.getElementById(id).value = ''));
+      statusEl.textContent = 'Logged.';
+      await loadTokens();
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.classList.add('error');
+    }
+  });
+
+  async function loadDownloads() {
+    const events = await api('/downloads');
+    const tbody = document.querySelector('#downloadsTable tbody');
+    tbody.innerHTML = events.map((d) => `
+      <tr>
+        <td>${d.plugin_name}</td>
+        <td>${d.platform}</td>
+        <td>${d.subscriber_email || 'anonymous'}</td>
+        <td>${fmtDate(d.downloaded_at)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="4" class="empty">No downloads logged yet.</td></tr>';
+  }
+
+  checkAuth();
+</script>
+
+</body>
+</html>
