@@ -136,6 +136,13 @@
   .preset-grid .pname{ font-weight:600; }
   .preset-grid .puse{ color:var(--ink-muted); font-size:.82rem; text-align:right; }
 
+  /* ---------------- badge states ---------------- */
+  .badge-row{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0; }
+  .badge-demo{ font-family:"IBM Plex Mono",monospace; font-size:.72rem; font-weight:600; letter-spacing:.04em; padding:6px 12px; border-radius:4px; border:1px solid var(--line); }
+  .badge-demo.b-trial{ color:var(--accent); border-color:var(--accent); }
+  .badge-demo.b-expired{ color:#B54A3E; border-color:#B54A3E; }
+  .badge-demo.b-licensed{ color:var(--ink-muted); }
+
   footer{ border-top:1px solid var(--line); padding:28px clamp(20px,4vw,40px); text-align:center; }
   footer p{ margin:0; max-width:none; font-size:.82rem; color:var(--ink-muted); }
 </style>
@@ -166,6 +173,8 @@
         <li><a href="#windows">Windows</a></li>
         <li><a href="#macos">macOS</a></li>
         <li><a href="#daw">Finding it in your DAW</a></li>
+        <li><a href="#activation">Activating your license</a></li>
+        <li><a href="#trial">The free trial</a></li>
         <li><a href="#uninstall">Uninstalling</a></li>
       </ul>
     </div>
@@ -187,7 +196,7 @@
     <!-- ============================= INSTALL ============================= -->
 
     <section id="requirements">
-      <div class="part-head"><h2>Part 1 — Installation</h2><span class="mono">5 sections</span></div>
+      <div class="part-head"><h2>Part 1 — Installation</h2><span class="mono">7 sections</span></div>
 
       <h3 class="sub">Before you start</h3>
       <p class="lead">One installer per platform sets up everything — the DAW plugin formats and the standalone app install together in a single run.</p>
@@ -230,6 +239,30 @@
     <section id="daw">
       <h3 class="sub">Finding it in your DAW</h3>
       <p>Most DAWs pick up a new VST3 or AU automatically on the next launch. If Zinox Lacquer doesn't show up in your plugin list, look for a manual rescan option — it's usually under a menu named something like <em>Plugin Manager</em>, <em>Preferences → Plug-ins</em>, or <em>Rescan Plugins</em>, depending on the DAW. Search for "Zinox" once the scan finishes.</p>
+    </section>
+
+    <section id="activation">
+      <h3 class="sub">Activating your license</h3>
+      <p class="lead">Activation is entirely offline — there's no account to create and no internet connection required.</p>
+      <ol class="steps">
+        <li><h4>Open the license panel</h4><p>Click the badge in the top-right of the plugin window (it reads <span class="mono">TRIAL: N DAYS LEFT</span> before you activate).</p></li>
+        <li><h4>Check the Machine ID</h4><p>The dialog shows this computer's Machine ID. If you bought a machine-locked key, this is the ID you'd have sent when purchasing — it has to match for that key to work here.</p></li>
+        <li><h4>Paste your license key</h4><p>Paste the key you were sent into the <strong>License key</strong> field and click <span class="key mono">ACTIVATE</span>.</p></li>
+        <li><h4>Done</h4><p>A confirmation names who the copy is licensed to. The badge switches to <span class="mono">LICENSED</span> and stays that way — the key is saved and re-checked automatically every time the plugin loads.</p></li>
+      </ol>
+      <div class="note"><strong>Moving to a new machine</strong>An unlocked key (not tied to a specific Machine ID) works on any computer you install Zinox Lacquer on. A machine-locked key only activates on the machine it was issued for — contact support if you need it moved.</div>
+    </section>
+
+    <section id="trial">
+      <h3 class="sub">The free trial</h3>
+      <p>Every install starts a genuine 7-day trial from first launch — full quality, every module and preset, nothing watermarked or held back. The badge tracks it:</p>
+      <div class="badge-row">
+        <span class="badge-demo b-trial mono">TRIAL: 7D LEFT</span>
+        <span class="badge-demo b-trial mono">TRIAL: 1D LEFT</span>
+        <span class="badge-demo b-expired mono">TRIAL EXPIRED</span>
+        <span class="badge-demo b-licensed mono">LICENSED</span>
+      </div>
+      <p>Once the 7 days are up without a license entered, the plugin stops processing audio — it outputs silence rather than degrading quality — and the window shows a "Free Trial Ended" screen with the license panel one click away. Entering a valid key at any point, during or after the trial, unlocks it permanently.</p>
     </section>
 
     <section id="uninstall">
