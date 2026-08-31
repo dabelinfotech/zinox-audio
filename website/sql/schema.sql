@@ -68,10 +68,11 @@ CREATE TABLE IF NOT EXISTS download_events (
   downloaded_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Seed rows for the two products this site already lists. Adjust pricing/
+-- Seed rows for the products this site already lists. Adjust pricing/
 -- description from the admin panel at any time - this just gets you started.
 INSERT INTO plugins (slug, name, description, price_monthly_cents, price_yearly_cents)
 VALUES
   ('zinox-vocals', 'Zinox Vocals', 'Vocal channel strip - VST3 / AU / Standalone', 500, 5000),
-  ('helium', 'Helium', 'High-frequency enhancer - VST3 / AU / Standalone', 800, 6000)
+  ('helium', 'Helium', 'High-frequency enhancer - VST3 / AU / Standalone', 800, 6000),
+  ('zinox-lacquer', 'Zinox Lacquer', 'Modular drag-and-drop vocal rack - VST3 / AU / Standalone', 700, 5500)
 ON CONFLICT (slug) DO NOTHING;
