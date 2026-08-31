@@ -74,5 +74,5 @@ INSERT INTO plugins (slug, name, description, price_monthly_cents, price_yearly_
 VALUES
   ('zinox-vocals', 'Zinox Vocals', 'Vocal channel strip - VST3 / AU / Standalone', 500, 5000),
   ('helium', 'Helium', 'High-frequency enhancer - VST3 / AU / Standalone', 800, 6000),
-  ('zinox-lacquer', 'Zinox Lacquer', 'Modular drag-and-drop vocal rack - VST3 / AU / Standalone', 700, 5500)
+  ('zinox-lacquer', 'Zinox Lacquer', 'Modular drag-and-drop vocal rack - VST3 / AU / Standalone', 800, 6000)
 ON CONFLICT (slug) DO NOTHING;
