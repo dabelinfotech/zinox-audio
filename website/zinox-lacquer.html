@@ -143,6 +143,68 @@
   .badge-demo.b-expired{ color:#B54A3E; border-color:#B54A3E; }
   .badge-demo.b-licensed{ color:var(--ink-muted); }
 
+  /* ---------------- buttons + trial modal ---------------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    font-family:"IBM Plex Sans", sans-serif;
+    font-weight:600; font-size:.92rem;
+    padding:12px 22px; border-radius:999px;
+    text-decoration:none; cursor:pointer; border:1px solid transparent;
+    white-space:nowrap; appearance:none; margin:0;
+    transition:transform .15s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); }
+  .btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .btn-primary{
+    background:linear-gradient(100deg, var(--accent), var(--accent-hover));
+    color:var(--accent-ink);
+    box-shadow:var(--shadow);
+  }
+  .btn-ghost{ background:transparent; color:var(--ink); border-color:var(--line); }
+  .btn-ghost:hover{ border-color:var(--ink-muted); }
+
+  .modal-backdrop{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(5,6,8,.72);
+    backdrop-filter:blur(6px);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  .modal-backdrop[hidden]{ display:none; }
+  .modal{
+    position:relative; width:100%; max-width:440px;
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:16px; padding:40px 32px 32px; text-align:center;
+    box-shadow:0 40px 80px -20px rgba(0,0,0,.6);
+  }
+  .modal-close{
+    position:absolute; top:14px; right:14px;
+    width:30px; height:30px;
+    display:flex; align-items:center; justify-content:center;
+    background:transparent; border:1px solid var(--line); border-radius:50%;
+    color:var(--ink-muted); font-size:1.1rem; line-height:1; cursor:pointer;
+  }
+  .modal-close:hover{ color:var(--ink); border-color:var(--ink-muted); }
+  .modal h2{ font-size:clamp(1.4rem,4vw,1.8rem); line-height:1.15; margin-top:4px; }
+  .modal-days{ margin-top:18px; font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:1.05rem; letter-spacing:.08em; color:var(--accent); }
+  .trial-form{ display:flex; flex-direction:column; gap:12px; margin-top:22px; }
+  .trial-form input[type="text"], .trial-form input[type="email"]{
+    width:100%; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:8px; padding:12px 14px; color:var(--ink);
+    font-family:"IBM Plex Sans", sans-serif; font-size:.92rem;
+  }
+  .trial-form input::placeholder{ color:var(--ink-muted); }
+  .trial-form input:focus-visible{ outline:2px solid var(--accent); outline-offset:1px; }
+  .modal-submit{ width:100%; margin-top:4px; }
+  .modal-fine{ margin-top:18px; font-size:.76rem; color:var(--ink-muted); }
+  .modal-fine a{ color:var(--ink); text-decoration:underline; }
+  .modal-status{ margin-top:12px; font-family:"IBM Plex Mono",monospace; font-size:.76rem; color:var(--accent); display:none; }
+  .modal-status.show{ display:block; }
+  #trialModalSuccess{ padding:24px 0 4px; }
+  .modal-success-sub{ margin-top:14px; font-size:.95rem; color:var(--ink-muted); }
+  .modal-downloads{ display:flex; flex-direction:column; gap:12px; margin-top:22px; }
+  .modal-downloads .btn{ width:100%; }
+
   footer{ border-top:1px solid var(--line); padding:28px clamp(20px,4vw,40px); text-align:center; }
   footer p{ margin:0; max-width:none; font-size:.82rem; color:var(--ink-muted); }
 </style>
@@ -161,6 +223,9 @@
   <p class="eyebrow">Installation &amp; Usage Guide</p>
   <h1>A modular vocal rack, built one module at a time.</h1>
   <p>Everything you need to install Zinox Lacquer on Windows or macOS and understand the drag-and-drop rack, the Macro section, and every module in the chain.</p>
+  <p style="margin-top:22px">
+    <button type="button" class="btn btn-primary" data-trial-trigger>Download Free 7-Day Trial</button>
+  </p>
   <img class="hero-image" src="assets/zinox-lacquer-plugin.png" alt="Zinox Lacquer plugin interface" width="1922" height="872">
 </div>
 
@@ -396,7 +461,121 @@
   </div>
 </div>
 
-<footer><p>Zinox Lacquer — Zinox Audio. This guide describes v1.2.0; exact menu names in your DAW may vary.</p></footer>
+<footer><p>Zinox Lacquer — Zinox Audio. This guide describes v1.3.0; exact menu names in your DAW may vary.</p></footer>
+
+<!-- Trial signup modal. Wired to Web3Forms (web3forms.com — free, no account,
+     just enter your email there to get an access key) so you get notified of
+     every trial signup with the person's name and email.
+
+     The actual installers are served directly from this site's own
+     /downloads/ folder (website/downloads/), matching the same pattern as
+     Zinox Vocals' trial modal on index.html. -->
+<div class="modal-backdrop" id="trialModalBackdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="trialModalTitle">
+    <button type="button" class="modal-close" id="trialModalClose" aria-label="Close">&times;</button>
+
+    <div id="trialModalBody">
+      <p class="eyebrow">No iLok, no dongle</p>
+      <h2 id="trialModalTitle">Unlock Your Free Trial For Zinox Lacquer</h2>
+      <p class="modal-days">7-DAY FREE TRIAL</p>
+      <form class="trial-form" id="trialForm" action="https://api.web3forms.com/submit" method="POST">
+        <input type="hidden" name="access_key" value="09da8381-3db9-4961-a271-b3944172aaf7">
+        <input type="hidden" name="subject" value="New Zinox Lacquer trial request">
+        <input type="hidden" name="redirect" value="/downloads/ZinoxLacquer-Windows-Setup.exe">
+        <input type="text" name="name" placeholder="First Name" autocomplete="given-name" required>
+        <input type="email" name="email" placeholder="Your Email" autocomplete="email" required>
+        <button type="submit" class="btn btn-primary modal-submit">Download Now</button>
+        <p class="modal-status" id="trialFormStatus" role="status"></p>
+      </form>
+      <p class="modal-fine">By signing up you agree to our <a href="terms.html">Terms of Service</a>.</p>
+    </div>
+
+    <div id="trialModalSuccess" hidden>
+      <h2>Your Download Is Ready!</h2>
+      <p class="modal-success-sub">Pick your platform below to start your 7-day trial.</p>
+      <div class="modal-downloads">
+        <a href="/downloads/ZinoxLacquer-Windows-Setup.exe" class="btn btn-primary">Download for Windows</a>
+        <a href="/downloads/ZinoxLacquer-macOS.dmg" class="btn btn-ghost">Download for macOS</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const trialBackdrop = document.getElementById('trialModalBackdrop');
+  const trialClose = document.getElementById('trialModalClose');
+  const trialModalBody = document.getElementById('trialModalBody');
+  const trialModalSuccess = document.getElementById('trialModalSuccess');
+  const trialForm = document.getElementById('trialForm');
+  const trialFormStatus = document.getElementById('trialFormStatus');
+  let trialLastFocused = null;
+
+  function openTrialModal() {
+    trialLastFocused = document.activeElement;
+    trialModalBody.hidden = false;
+    trialModalSuccess.hidden = true;
+    trialFormStatus.textContent = '';
+    trialFormStatus.classList.remove('show');
+    trialForm.reset();
+    trialBackdrop.hidden = false;
+    const firstInput = trialBackdrop.querySelector('input[type="text"]');
+    if (firstInput) firstInput.focus();
+  }
+  function closeTrialModal() {
+    trialBackdrop.hidden = true;
+    if (trialLastFocused) trialLastFocused.focus();
+  }
+
+  trialForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = trialForm.querySelector('.modal-submit');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    trialFormStatus.classList.remove('show');
+
+    try {
+      const formData = new FormData(trialForm);
+      const res = await fetch(trialForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.message || 'Submission failed');
+      }
+
+      // Also record the signup in our own subscribers table (admin panel ->
+      // Subscribers), independent of the Web3Forms email above. Fire-and-
+      // forget: this must never block or fail the trial download itself.
+      fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.get('name'), email: formData.get('email') })
+      }).catch(() => {});
+
+      trialModalBody.hidden = true;
+      trialModalSuccess.hidden = false;
+    } catch (err) {
+      trialFormStatus.textContent = "Couldn't send that — check your email and try again.";
+      trialFormStatus.classList.add('show');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Download Now';
+    }
+  });
+
+  document.querySelectorAll('[data-trial-trigger]').forEach(btn => {
+    btn.addEventListener('click', openTrialModal);
+  });
+  trialClose.addEventListener('click', closeTrialModal);
+  trialBackdrop.addEventListener('click', (e) => {
+    if (e.target === trialBackdrop) closeTrialModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !trialBackdrop.hidden) closeTrialModal();
+  });
+</script>
 
 </body>
 </html>
