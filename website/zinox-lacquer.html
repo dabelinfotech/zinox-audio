@@ -205,6 +205,31 @@
   .modal-downloads{ display:flex; flex-direction:column; gap:12px; margin-top:22px; }
   .modal-downloads .btn{ width:100%; }
 
+  /* ---------------- pricing ---------------- */
+  .pricing-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:20px; max-width:640px; margin:24px 0 0; }
+  @media (max-width:600px){ .pricing-grid{ grid-template-columns:1fr; } }
+  .plan-card{
+    position:relative; background:var(--surface); border:1px solid var(--line);
+    border-radius:16px; padding:28px; display:flex; flex-direction:column;
+  }
+  .plan-card.featured{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+  .plan-card .badge{
+    position:absolute; top:-12px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(100deg, var(--accent), var(--accent-hover));
+    color:var(--accent-ink); font-family:"IBM Plex Mono",monospace;
+    font-size:.64rem; letter-spacing:.08em; text-transform:uppercase;
+    padding:4px 12px; border-radius:999px; font-weight:600;
+  }
+  .plan-name{ font-family:"IBM Plex Mono",monospace; font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-muted); }
+  .plan-amount{ font-family:"Unbounded",sans-serif; font-weight:800; font-size:2.2rem; display:flex; align-items:baseline; gap:6px; margin-top:6px; }
+  .plan-amount .unit{ font-family:"IBM Plex Mono",monospace; font-size:.82rem; color:var(--ink-muted); font-weight:500; }
+  .plan-sub{ font-size:.82rem; color:var(--ink-muted); margin-top:4px; }
+  .plan-card ul{ margin:18px 0 20px; padding-left:0; list-style:none; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .plan-card li{ font-size:.86rem; color:var(--ink-muted); padding-left:20px; position:relative; }
+  .plan-card li::before{ content:"\2713"; position:absolute; left:0; color:var(--accent); font-weight:700; }
+  .plan-card .btn{ width:100%; }
+  .price-fine{ margin-top:16px; font-family:"IBM Plex Mono",monospace; font-size:.7rem; color:var(--ink-muted); }
+
   footer{ border-top:1px solid var(--line); padding:28px clamp(20px,4vw,40px); text-align:center; }
   footer p{ margin:0; max-width:none; font-size:.82rem; color:var(--ink-muted); }
 </style>
@@ -227,6 +252,42 @@
     <button type="button" class="btn btn-primary" data-trial-trigger>Download Free 7-Day Trial</button>
   </p>
   <img class="hero-image" src="assets/zinox-lacquer-plugin.png" alt="Zinox Lacquer plugin interface" width="1922" height="872">
+
+  <!-- Paddle hosted checkout links: in Paddle > Catalog > Products, create a
+       "Zinox Lacquer" product with two recurring Prices (monthly $8, yearly $60),
+       then build each checkout link as YOUR_HOSTED_CHECKOUT_URL?price_id=pri_xxx
+       (Paddle > Checkout > Checkout settings gives you the base hosted URL; the
+       price_id comes from each Price you created). Paste the two finished links
+       in place of the REPLACE_WITH_*_LINK placeholders below - same pattern as
+       the Zinox Vocals pricing section on index.html. -->
+  <div class="pricing-grid">
+    <div class="plan-card">
+      <p class="plan-name">Monthly</p>
+      <div class="plan-amount">$8<span class="unit">/ month</span></div>
+      <p class="plan-sub">Cancel anytime</p>
+      <ul>
+        <li>Full access to Zinox Lacquer</li>
+        <li>Free updates for as long as you're subscribed</li>
+        <li>VST3, AU &amp; Standalone — Windows &amp; macOS</li>
+        <li>7-day free trial, no card required</li>
+      </ul>
+      <a href="https://REPLACE_WITH_YOUR_PADDLE_CHECKOUT_URL?price_id=REPLACE_WITH_MONTHLY_PRICE_ID" class="btn btn-ghost">Start Monthly</a>
+    </div>
+    <div class="plan-card featured">
+      <span class="badge">Best value</span>
+      <p class="plan-name">Annual</p>
+      <div class="plan-amount">$60<span class="unit">/ year</span></div>
+      <p class="plan-sub">$5/month billed yearly — 2 months free</p>
+      <ul>
+        <li>Everything in Monthly</li>
+        <li>Locked-in price for the full year</li>
+        <li>Priority support</li>
+        <li>7-day free trial, no card required</li>
+      </ul>
+      <a href="https://REPLACE_WITH_YOUR_PADDLE_CHECKOUT_URL?price_id=REPLACE_WITH_ANNUAL_PRICE_ID" class="btn btn-primary">Start Annual</a>
+    </div>
+  </div>
+  <p class="price-fine">Placeholder pricing links — swap in your real Paddle checkout URLs. Prices in USD; cancel anytime from your account.</p>
 </div>
 
 <div class="layout">
