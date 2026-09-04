@@ -17,9 +17,30 @@ static constexpr const char* kPublicKey = "";
 namespace
 {
     juce::String canonicalFields (const juce::String& name, const juce::String& email,
-                                  const juce::String& machine)
+                                  const juce::String& machine, const juce::String& expires)
     {
-        return name + "\n" + email + "\n" + machine + "\n";
+        return name + "\n" + email + "\n" + machine + "\n" + expires + "\n";
+    }
+
+    // Mirrors Trial's anti-rollback high-water mark (see Trial.cpp): winding
+    // the system clock backwards can't resurrect an expired subscription key,
+    // because the expiry check always uses the latest clock value this
+    // installation has ever observed.
+    juce::Time protectedNow()
+    {
+        auto file = License::getLicenseFile().getSiblingFile ("license-clock.dat");
+        const auto now = juce::Time::currentTimeMillis();
+
+        juce::int64 highWaterMark = now;
+        if (file.existsAsFile())
+            highWaterMark = file.loadFileAsString().getLargeIntValue();
+
+        const auto effectiveNow = juce::jmax (now, highWaterMark);
+
+        file.getParentDirectory().createDirectory();
+        file.replaceWithText (juce::String (effectiveNow));
+
+        return juce::Time (effectiveNow);
     }
 }
 
@@ -36,7 +57,7 @@ juce::File License::getLicenseFile()
                .getChildFile ("license.key");
 }
 
-License::Info License::verify (const juce::String& licenseBlob)
+License::Info License::verify (const juce::String& licenseBlob, juce::Time now)
 {
     Info info;
 
@@ -59,6 +80,7 @@ License::Info License::verify (const juce::String& licenseBlob)
     const auto name    = xml->getStringAttribute ("name");
     const auto email   = xml->getStringAttribute ("email");
     const auto machine = xml->getStringAttribute ("machine");
+    const auto expires = xml->getStringAttribute ("expires");
     const auto sigHex   = xml->getStringAttribute ("sig");
 
     if (name.isEmpty() || email.isEmpty() || sigHex.isEmpty())
@@ -68,7 +90,7 @@ License::Info License::verify (const juce::String& licenseBlob)
     if (machine.isNotEmpty() && machine != getMachineId())
         return info;
 
-    juce::SHA256 hash (canonicalFields (name, email, machine).toUTF8());
+    juce::SHA256 hash (canonicalFields (name, email, machine, expires).toUTF8());
 
     juce::BigInteger hashValue, signature;
     hashValue.parseString (hash.toHexString(), 16);
@@ -77,9 +99,31 @@ License::Info License::verify (const juce::String& licenseBlob)
     if (! publicKey.applyToValue (signature) || signature != hashValue)
         return info;
 
-    info.valid = true;
+    // Signature confirmed authentic below this point, so it's safe to
+    // surface name/email even if the key turns out to be expired.
     info.name = name;
     info.email = email;
+
+    if (expires.isNotEmpty())
+    {
+        const auto expiresAt = juce::Time::fromISO8601 (expires);
+
+        // A blank/unparseable date on an otherwise-authentic signature means
+        // the field was mangled somehow - fail closed rather than guess.
+        if (expiresAt == juce::Time())
+            return Info();
+
+        info.hasExpiry = true;
+        info.expiresAt = expiresAt;
+
+        if (now >= expiresAt)
+        {
+            info.expired = true;
+            return info; // valid stays false: expired keys don't authorize use
+        }
+    }
+
+    info.valid = true;
     return info;
 }
 
@@ -90,12 +134,12 @@ License::Info License::loadSaved()
     if (! file.existsAsFile())
         return {};
 
-    return verify (file.loadFileAsString());
+    return verify (file.loadFileAsString(), protectedNow());
 }
 
 License::Info License::activate (const juce::String& licenseBlob)
 {
-    auto info = verify (licenseBlob);
+    auto info = verify (licenseBlob, protectedNow());
 
     if (info.valid)
     {

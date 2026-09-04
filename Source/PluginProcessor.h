@@ -61,6 +61,11 @@ public:
         not from the audio thread - it touches disk. */
     void refreshTrialStatus();
 
+    /** Re-verifies the saved license against the current time, so a
+        subscription that lapses mid-session is caught without requiring a
+        plugin reload. Same disk-touching caveat as refreshTrialStatus(). */
+    void refreshLicenseStatus();
+
     // --- standalone live file playback -----------------------------------------
     // Only meaningful when wrapperType == wrapperType_Standalone: substitutes
     // an imported file for the live input, so it plays through the exact same

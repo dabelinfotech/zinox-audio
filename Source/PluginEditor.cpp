@@ -447,8 +447,15 @@ void ZinoxVocalsEditor::updateLicenseBadge()
 
     if (info.valid)
     {
-        licenseBadge.setButtonText ("LICENSED");
+        licenseBadge.setButtonText (info.hasExpiry
+            ? "LICENSED \xC2\xB7 UNTIL " + info.expiresAt.formatted ("%d %b %Y").toUpperCase()
+            : juce::String ("LICENSED"));
         licenseBadge.setColour (juce::TextButton::textColourOffId, textDim);
+    }
+    else if (info.expired)
+    {
+        licenseBadge.setButtonText ("SUBSCRIPTION EXPIRED");
+        licenseBadge.setColour (juce::TextButton::textColourOffId, meterRed);
     }
     else if (trial.expired)
     {
@@ -474,8 +481,15 @@ void ZinoxVocalsEditor::showLicenseDialog()
 
     if (info.valid)
     {
-        message = "Licensed to " + info.name + " <" + info.email + ">.\n\n"
-                  "Paste a different key below to replace it.";
+        message = "Licensed to " + info.name + " <" + info.email + ">"
+                  + (info.hasExpiry ? " until " + info.expiresAt.formatted ("%d %b %Y") + "." : juce::String ("."))
+                  + "\n\nPaste a different key below to replace it.";
+    }
+    else if (info.expired)
+    {
+        message = "The subscription for " + info.name + " <" + info.email + "> expired "
+                  + info.expiresAt.formatted ("%d %b %Y") + ", and audio processing is disabled.\n\n"
+                  "Paste a renewed license key below to keep using Zinox Vocals.";
     }
     else if (trial.expired)
     {
@@ -515,14 +529,21 @@ void ZinoxVocalsEditor::showLicenseDialog()
                     const auto newInfo = processor.activateLicense (key);
                     updateLicenseBadge();
 
+                    const auto title = newInfo.valid ? "Activated"
+                                      : newInfo.expired ? "Key Expired"
+                                                        : "Invalid Key";
+                    const auto body = newInfo.valid
+                        ? "Thanks, " + newInfo.name + " - Zinox Vocals is now licensed on this machine."
+                        : newInfo.expired
+                            ? "That key was valid but expired " + newInfo.expiresAt.formatted ("%d %b %Y")
+                              + ". Ask for a renewed one."
+                            : juce::String ("That key didn't verify. Double-check it was copied in full "
+                                            "and that it matches this machine's ID.");
+
                     juce::AlertWindow::showMessageBoxAsync (
                         newInfo.valid ? juce::MessageBoxIconType::InfoIcon
                                      : juce::MessageBoxIconType::WarningIcon,
-                        newInfo.valid ? "Activated" : "Invalid Key",
-                        newInfo.valid
-                            ? "Thanks, " + newInfo.name + " - Zinox Vocals is now licensed on this machine."
-                            : "That key didn't verify. Double-check it was copied in full and "
-                              "that it matches this machine's ID.");
+                        title, body);
                 }
             }
 
@@ -546,11 +567,25 @@ void ZinoxVocalsEditor::timerCallback()
     if (++trialCheckCounter >= 150)
     {
         trialCheckCounter = 0;
-        const bool wasExpired = processor.getTrialStatus().expired;
+        const bool wasTrialExpired   = processor.getTrialStatus().expired;
+        const bool wasLicenseExpired = processor.getLicenseInfo().expired;
+
         processor.refreshTrialStatus();
+        processor.refreshLicenseStatus();
         updateLicenseBadge();
 
-        if (! wasExpired && processor.getTrialStatus().expired && ! processor.getLicenseInfo().valid)
+        const auto& license = processor.getLicenseInfo();
+
+        if (! wasLicenseExpired && license.expired)
+        {
+            repaint();
+            juce::AlertWindow::showMessageBoxAsync (
+                juce::MessageBoxIconType::WarningIcon, "Subscription Expired",
+                "Your Zinox Vocals subscription has just expired, and audio "
+                "processing is now disabled.\n\nRenew and enter a new license key "
+                "to keep using it - click the badge in the top right.");
+        }
+        else if (! wasTrialExpired && processor.getTrialStatus().expired && ! license.valid)
         {
             repaint();
             juce::AlertWindow::showMessageBoxAsync (
@@ -970,8 +1005,10 @@ void ZinoxVocalsEditor::paint (juce::Graphics& g)
         g.fillAll();
     }
 
-    // Same treatment, stronger message, when the trial has run out.
-    if (processor.getTrialStatus().expired && ! processor.getLicenseInfo().valid)
+    // Same treatment, stronger message, when the trial has run out or a
+    // subscription key has lapsed.
+    const auto& licenseInfo = processor.getLicenseInfo();
+    if ((processor.getTrialStatus().expired || licenseInfo.expired) && ! licenseInfo.valid)
     {
         auto r = getLocalBounds().toFloat();
 
@@ -980,12 +1017,14 @@ void ZinoxVocalsEditor::paint (juce::Graphics& g)
 
         g.setFont (labelFont (22.0f * scale, true));
         g.setColour (goldBright);
-        drawTracked (g, "FREE TRIAL ENDED", r.withHeight (r.getHeight() * 0.5f).toNearestInt(),
+        drawTracked (g, licenseInfo.expired ? "SUBSCRIPTION EXPIRED" : "FREE TRIAL ENDED",
+                     r.withHeight (r.getHeight() * 0.5f).toNearestInt(),
                      juce::Justification::centred, 2.0f);
 
         g.setFont (labelFont (13.0f * scale, false));
         g.setColour (text);
-        drawTracked (g, "ENTER A LICENSE KEY TO KEEP USING ZINOX VOCALS",
+        drawTracked (g, licenseInfo.expired ? "RENEW YOUR SUBSCRIPTION TO KEEP USING ZINOX VOCALS"
+                                             : "ENTER A LICENSE KEY TO KEEP USING ZINOX VOCALS",
                      r.withTop (r.getCentreY()).toNearestInt(),
                      juce::Justification::centred, 1.4f);
     }

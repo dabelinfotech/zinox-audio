@@ -414,9 +414,19 @@ void ZinoxVocalsProcessor::refreshTrialStatus()
     updateTrialBlockedFlag();
 }
 
+void ZinoxVocalsProcessor::refreshLicenseStatus()
+{
+    licenseInfo = zx::License::loadSaved();
+    updateTrialBlockedFlag();
+}
+
 void ZinoxVocalsProcessor::updateTrialBlockedFlag() noexcept
 {
-    trialBlocked.store (! licenseInfo.valid && trialStatus.expired, std::memory_order_relaxed);
+    // A lapsed subscription blocks processing immediately, independent of
+    // trial timing - the trial doesn't matter once a license has ever been
+    // activated.
+    trialBlocked.store (! licenseInfo.valid && (trialStatus.expired || licenseInfo.expired),
+                         std::memory_order_relaxed);
 }
 
 // ---------------------------------------------------------------------------
