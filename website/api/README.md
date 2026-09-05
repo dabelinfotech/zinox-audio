@@ -35,14 +35,34 @@ static HTML it was before; this is additive.
 
 | Path | What it does |
 |---|---|
-| `api/auth/*` | Login/logout/status for the single admin session (signed cookie, no user table) |
-| `api/plugins/*` | CRUD for the plugin listing (name, description, pricing) |
-| `api/files/*` | Upload (client → Blob directly, admin-only token), list, delete installers |
-| `api/subscribers/*` | Public POST for trial signups; admin GET/DELETE to manage the list |
-| `api/tokens/*` | Records license keys issued via the offline `HeliumLicenseGen`/`ZinoxLicenseGen` CLI tools - **the signing private key never touches this server**, this only logs the already-signed key blob for your own reference, and lets you mark one revoked |
+| `api/auth/[action].js` | Login/logout/status for the single admin session (signed cookie, no user table) - one file, dispatching on the `login`/`logout`/`status` segment |
+| `api/plugins/index.js`, `[id].js` | CRUD for the plugin listing (name, description, pricing) |
+| `api/files/index.js`, `[id].js`, `upload-token.js` | List/delete installers, plus the client → Blob direct-upload handshake (its own function, unaffected by anything below) |
+| `api/subscribers/index.js`, `[id].js` | Public POST for trial signups; admin GET/DELETE to manage the list |
+| `api/tokens/index.js`, `[id].js` | Records license keys issued via the offline `HeliumLicenseGen`/`ZinoxLicenseGen` CLI tools - **the signing private key never touches this server**, this only logs the already-signed key blob for your own reference, and lets you mark one revoked |
 | `api/tokens/issue.js` | Optional alternative: signs *and* logs a key in one request, from the admin panel, no CLI needed - only if that plugin has a `LICENSE_PRIVATE_KEY_<SLUG>` env var set (see "Server-side key signing" below). This one **does** put the private key on this server. |
-| `api/downloads/*` | Read-only usage log - every hit on `/api/download` |
-| `api/download.js` | Public: `GET /api/download?slug=helium&platform=windows` logs the hit and redirects to the current uploaded file. Additive - existing static `/downloads/*.exe` links keep working untouched until you choose to switch a button over to this |
+| `api/downloads/index.js` | Two things in one function, told apart by query shape: admin-gated usage log (no `slug`/`platform`), or the public `GET /api/downloads?slug=helium&platform=windows` hit-log-and-redirect (was `/api/download`, singular, before the routing fix below - nothing linked to it yet, so nothing broke) |
+
+### Why `index.js` + `[id].js` instead of one `[[...id]].js` per resource
+
+Every one of `plugins`, `subscribers`, `files`, and `tokens` used to be a
+single `[[...id]].js` file - Next.js's "optional catch-all" convention,
+meant to match both the bare path and any `/:id` under it in one function,
+to stay under Vercel Hobby's 12-function limit. **That convention doesn't
+work outside Next.js.** Plain Vercel Serverless Functions only support
+`[...id].js` (catch-all, *one or more* segments) - there's no zero-segment
+match, so `/api/plugins`, `/api/tokens`, `/api/subscribers`, and `/api/files`
+(no id) all silently 404'd, while `/api/plugins/1` etc. worked fine. That's
+what was breaking the Plugin dropdown (empty - the list call 404'd) and
+"Log key" (404 on `POST /api/tokens`).
+
+The fix is back to two files per resource - the standard, unambiguous way -
+which costs 4 extra functions (8 instead of 4). To stay at exactly 12, two
+unrelated pairs were merged into one function each: the three tiny
+`auth/*` files into `auth/[action].js`, and `download.js` into
+`downloads/index.js` (told apart by query shape, see the table above).
+Both of those are genuine single-segment routes or method/shape
+dispatches, not an attempt at the same broken optional-catch-all trick.
 
 ## Server-side key signing (optional, per plugin)
 
@@ -71,17 +91,23 @@ key" paste-in flow keeps working regardless, for every plugin, always.
 
 ## Things I couldn't verify without a live deployment
 
+- The `index.js` + `[id].js` split (plugins, subscribers, files, tokens)
+  and the `auth/[action].js` / `downloads/index.js` merges are ordinary,
+  well-understood filesystem routing - no double-bracket tricks anywhere
+  in this batch - but I don't have a Vercel account to deploy and hit
+  these live. After deploying, a quick check worth doing: the Plugin
+  dropdown in the admin panel populates, "Log key" no longer 404s, and
+  `curl https://<domain>/api/plugins` returns JSON instead of 404.
 - `api/tokens/issue.js`'s actual RSA signing (hashing, modular exponentiation,
   XML/Base64 packaging in `api/_lib/licensing.js`) was tested end-to-end
   locally with Node against the real Zinox Vocals private key, and the
   resulting keys verified successfully against the compiled plugin - that
-  part is solid. What I couldn't test live: that `/api/tokens/issue`
-  actually reaches this file rather than the sibling `tokens/[[...id]].js`
-  catch-all. It should, on the same precedent as `files/upload-token.js`
-  already coexisting with `files/[[...id]].js` - Vercel matches a specific
-  literal path before falling back to a catch-all - but confirm this
-  resolves correctly (a distinct 400/404/500 from *this* file, not the
-  "Invalid token id" from the catch-all) the first time you use it.
+  part is solid. `/api/tokens/issue` reaching this file rather than the
+  sibling `tokens/[id].js` rests on the same precedent as
+  `files/upload-token.js` already coexisting with `files/[id].js` - a
+  literal path always wins over a same-level dynamic one - but confirm
+  this the first time you use it (a distinct 400/500 from *this* file,
+  not "Invalid token id" from `[id].js`).
 - `api/files/upload-token.js` implements `@vercel/blob`'s client-upload
   handshake (`handleUpload`/`onUploadCompleted`) from documentation, not
   from a live test run - I don't have a Vercel account to actually deploy
