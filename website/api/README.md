@@ -40,11 +40,48 @@ static HTML it was before; this is additive.
 | `api/files/*` | Upload (client → Blob directly, admin-only token), list, delete installers |
 | `api/subscribers/*` | Public POST for trial signups; admin GET/DELETE to manage the list |
 | `api/tokens/*` | Records license keys issued via the offline `HeliumLicenseGen`/`ZinoxLicenseGen` CLI tools - **the signing private key never touches this server**, this only logs the already-signed key blob for your own reference, and lets you mark one revoked |
+| `api/tokens/issue.js` | Optional alternative: signs *and* logs a key in one request, from the admin panel, no CLI needed - only if that plugin has a `LICENSE_PRIVATE_KEY_<SLUG>` env var set (see "Server-side key signing" below). This one **does** put the private key on this server. |
 | `api/downloads/*` | Read-only usage log - every hit on `/api/download` |
 | `api/download.js` | Public: `GET /api/download?slug=helium&platform=windows` logs the hit and redirects to the current uploaded file. Additive - existing static `/downloads/*.exe` links keep working untouched until you choose to switch a button over to this |
 
+## Server-side key signing (optional, per plugin)
+
+By default, issuing a license key means running that plugin's `LicenseKeyGen`
+CLI tool locally and pasting the result into the admin panel - the private
+key never leaves whoever's machine runs the tool. `api/tokens/issue.js` is
+an opt-in alternative that signs the key here instead, so the admin panel
+can issue one from any browser with no local tool at all. Both paths
+produce cryptographically identical keys and can be used interchangeably
+for the same plugin.
+
+**This is a real trade-off, not a config detail**: turning it on for a
+plugin means that plugin's private key lives in a Vercel environment
+variable. If this project or function is ever compromised, every key for
+that plugin - past and future - becomes forgeable, and there's no cheap
+fix: rotating the key invalidates every key already issued to customers and
+requires re-shipping the plugin with the new public key. Only turn this on
+if you're comfortable with that.
+
+To enable it for a plugin, set an environment variable named
+`LICENSE_PRIVATE_KEY_<SLUG>` (the plugin's slug, uppercased, `-` → `_` -
+e.g. `zinox-vocals` → `LICENSE_PRIVATE_KEY_ZINOX_VOCALS`) to the exact
+contents of that plugin's `Licensing/keys/private.key` file, then redeploy.
+Leave it unset for any plugin you want to keep local-CLI-only - the "Log
+key" paste-in flow keeps working regardless, for every plugin, always.
+
 ## Things I couldn't verify without a live deployment
 
+- `api/tokens/issue.js`'s actual RSA signing (hashing, modular exponentiation,
+  XML/Base64 packaging in `api/_lib/licensing.js`) was tested end-to-end
+  locally with Node against the real Zinox Vocals private key, and the
+  resulting keys verified successfully against the compiled plugin - that
+  part is solid. What I couldn't test live: that `/api/tokens/issue`
+  actually reaches this file rather than the sibling `tokens/[[...id]].js`
+  catch-all. It should, on the same precedent as `files/upload-token.js`
+  already coexisting with `files/[[...id]].js` - Vercel matches a specific
+  literal path before falling back to a catch-all - but confirm this
+  resolves correctly (a distinct 400/404/500 from *this* file, not the
+  "Invalid token id" from the catch-all) the first time you use it.
 - `api/files/upload-token.js` implements `@vercel/blob`'s client-upload
   handshake (`handleUpload`/`onUploadCompleted`) from documentation, not
   from a live test run - I don't have a Vercel account to actually deploy

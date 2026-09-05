@@ -132,7 +132,7 @@
   <section class="panel" id="panel-tokens">
     <div class="card">
       <h3>Issue a license key</h3>
-      <p class="status-msg">The signing key never touches this server, so nothing here signs anything - fill in the details below to get the exact command to run locally, run it, then paste back whatever it prints.</p>
+      <p class="status-msg">Two ways to do this: click <strong>Generate on server</strong> below to sign and log a key immediately (only works for a plugin with a signing key configured here) - or run the generated command locally yourself, with the private key never leaving your machine, and paste the result into <strong>Log key</strong>.</p>
       <div class="form-row">
         <select id="t-plugin"></select>
         <input id="t-name" placeholder="Customer name">
@@ -151,8 +151,9 @@
       <div class="form-row">
         <code class="mono command-box" id="t-command"></code>
         <button class="btn" id="t-copy-command" type="button">Copy command</button>
+        <button class="btn btn-primary" id="t-generate" type="button">Generate on server</button>
       </div>
-      <p class="status-msg" id="t-command-note">Run that in a terminal (in the repo for the plugin selected above), then paste what it prints below.</p>
+      <p class="status-msg" id="t-command-note">Run that in a terminal (in the repo for the plugin selected above), then paste what it prints below - or use Generate on server instead, if that plugin has a signing key configured.</p>
       <div class="form-row">
         <input id="t-key" placeholder="Paste the printed key blob here" style="flex:3;">
         <button class="btn btn-primary" id="t-add">Log key</button>
@@ -474,6 +475,40 @@
       ['t-name', 't-email', 't-machine', 't-key'].forEach((id) => (document.getElementById(id).value = ''));
       updateTokenCommand();
       statusEl.textContent = 'Logged.';
+      await loadTokens();
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.classList.add('error');
+    }
+  });
+
+  document.getElementById('t-generate').addEventListener('click', async () => {
+    const statusEl = document.getElementById('t-status');
+    statusEl.classList.remove('error');
+
+    const name = document.getElementById('t-name').value.trim();
+    const email = document.getElementById('t-email').value.trim();
+    if (!name || !email) {
+      statusEl.textContent = 'Customer name and email are required.';
+      statusEl.classList.add('error');
+      return;
+    }
+
+    statusEl.textContent = 'Signing...';
+    try {
+      const token = await api('/tokens/issue', {
+        method: 'POST',
+        body: JSON.stringify({
+          pluginSlug: document.getElementById('t-plugin').value,
+          name,
+          email,
+          machineId: document.getElementById('t-machine').value.trim(),
+          duration: document.getElementById('t-duration').value,
+          days: document.getElementById('t-days').value.trim(),
+        }),
+      });
+      document.getElementById('t-key').value = token.key_blob;
+      statusEl.textContent = 'Signed and logged - copy the key above to send to the customer.';
       await loadTokens();
     } catch (err) {
       statusEl.textContent = err.message;
