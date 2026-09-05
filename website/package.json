@@ -1,0 +1,10 @@
+{
+  "name": "zinoxaudio-website",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Static site + Vercel Serverless Functions backing the ZinoxAudio marketplace admin panel.",
+  "dependencies": {
+    "@vercel/blob": "^0.27.1",
+    "@vercel/postgres": "^0.10.0"
+  }
+}

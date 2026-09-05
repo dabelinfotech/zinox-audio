@@ -486,6 +486,8 @@
         <summary>Plugins</summary>
         <div class="dropdown-menu">
           <a href="plugins.html">Zinox Vocals</a>
+          <a href="helium.html">Helium</a>
+          <a href="zinox-lacquer.html">Zinox Lacquer</a>
         </div>
       </details>
     </nav>
@@ -943,15 +945,26 @@
     trialFormStatus.classList.remove('show');
 
     try {
+      const formData = new FormData(trialForm);
       const res = await fetch(trialForm.action, {
         method: 'POST',
-        body: new FormData(trialForm),
+        body: formData,
         headers: { 'Accept': 'application/json' }
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.success === false) {
         throw new Error(data.message || 'Submission failed');
       }
+
+      // Also record the signup in our own subscribers table (admin panel ->
+      // Subscribers), independent of the Web3Forms email above. Fire-and-
+      // forget: this must never block or fail the trial download itself.
+      fetch('/api/subscribers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: formData.get('name'), email: formData.get('email') })
+      }).catch(() => {});
+
       trialModalBody.hidden = true;
       trialModalSuccess.hidden = false;
     } catch (err) {
