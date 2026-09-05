@@ -60,6 +60,7 @@
   .badge.current{ color:var(--accent); border-color:var(--accent); }
   .badge.revoked{ color:var(--danger); border-color:var(--danger); }
   .empty{ color:var(--ink-muted); font-size:.88rem; padding:20px 0; }
+  .command-box{ flex:1; min-width:260px; padding:9px 12px; border-radius:6px; border:1px solid var(--line); background:var(--bg); color:var(--accent); font-size:.82rem; overflow-x:auto; white-space:pre; }
 </style>
 </head>
 <body>
@@ -130,15 +131,30 @@
 
   <section class="panel" id="panel-tokens">
     <div class="card">
-      <h3>Log an issued license key</h3>
-      <p class="status-msg">Run <span class="mono">HeliumLicenseGen issue "Name" "email"</span> (or ZinoxLicenseGen) locally first - the signing key never touches this server. Paste the result here just to keep a record.</p>
+      <h3>Issue a license key</h3>
+      <p class="status-msg">The signing key never touches this server, so nothing here signs anything - fill in the details below to get the exact command to run locally, run it, then paste back whatever it prints.</p>
       <div class="form-row">
         <select id="t-plugin"></select>
+        <input id="t-name" placeholder="Customer name">
         <input id="t-email" placeholder="Customer email">
-        <input id="t-machine" placeholder="Machine ID (optional)">
       </div>
       <div class="form-row">
-        <input id="t-key" placeholder="Full key blob" style="flex:3;">
+        <select id="t-duration">
+          <option value="monthly">Monthly (30 days)</option>
+          <option value="yearly">Yearly (365 days)</option>
+          <option value="days">Custom - N days from today</option>
+          <option value="perpetual">Perpetual (one-time purchase, never expires)</option>
+        </select>
+        <input id="t-days" type="number" min="1" placeholder="Days" style="display:none; max-width:110px;">
+        <input id="t-machine" placeholder="Machine ID (optional - locks the key to one machine)">
+      </div>
+      <div class="form-row">
+        <code class="mono command-box" id="t-command"></code>
+        <button class="btn" id="t-copy-command" type="button">Copy command</button>
+      </div>
+      <p class="status-msg" id="t-command-note">Run that in a terminal (in the repo for the plugin selected above), then paste what it prints below.</p>
+      <div class="form-row">
+        <input id="t-key" placeholder="Paste the printed key blob here" style="flex:3;">
         <button class="btn btn-primary" id="t-add">Log key</button>
       </div>
       <p class="status-msg" id="t-status"></p>
@@ -169,6 +185,65 @@
   const loginError = document.getElementById('loginError');
 
   let pluginsCache = [];
+
+  // Maps a plugin slug to its offline LicenseKeyGen tool's binary name, so the
+  // command generator below names the right tool per plugin. Add an entry
+  // here for any new plugin whose slug doesn't already reduce to the right
+  // PascalCase name via the fallback.
+  const LICENSE_TOOL_BY_SLUG = {
+    'zinox-vocals': 'ZinoxLicenseGen',
+    'helium': 'HeliumLicenseGen',
+    'zinox-lacquer': 'ZinoxLacquerLicenseGen',
+  };
+
+  function licenseToolName(plugin) {
+    if (!plugin) return 'LicenseGen';
+    return LICENSE_TOOL_BY_SLUG[plugin.slug]
+        || (plugin.name || plugin.slug).replace(/[^a-z0-9]/gi, '') + 'LicenseGen';
+  }
+
+  // Quotes a value for display in a shell command. Good enough for names and
+  // emails typed into this form - it isn't meant to be pasted into a shell
+  // that itself needs escaping beyond double quotes.
+  function shellQuote (s) {
+    return `"${(s || '').replace(/"/g, '\\"')}"`;
+  }
+
+  function updateTokenCommand() {
+    const plugin = pluginsCache.find((p) => p.slug === document.getElementById('t-plugin').value);
+    const name = document.getElementById('t-name').value.trim();
+    const email = document.getElementById('t-email').value.trim();
+    const machine = document.getElementById('t-machine').value.trim();
+    const duration = document.getElementById('t-duration').value;
+
+    const daysField = document.getElementById('t-days');
+    daysField.style.display = duration === 'days' ? '' : 'none';
+
+    const durationFlag = duration === 'monthly' ? '--monthly'
+      : duration === 'yearly' ? '--yearly'
+      : duration === 'perpetual' ? '--perpetual'
+      : `--days ${daysField.value.trim() || 'N'}`;
+
+    const parts = [
+      licenseToolName(plugin), 'issue',
+      shellQuote (name || 'Customer Name'),
+      shellQuote (email || 'customer@email.com'),
+      durationFlag,
+    ];
+    if (machine) parts.push ('--machine', shellQuote (machine));
+
+    document.getElementById('t-command').textContent = parts.join(' ');
+  }
+
+  ['t-plugin', 't-name', 't-email', 't-machine', 't-duration', 't-days'].forEach((id) => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', updateTokenCommand);
+    el.addEventListener('change', updateTokenCommand);
+  });
+
+  document.getElementById('t-copy-command').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('t-command').textContent);
+  });
 
   async function checkAuth() {
     const { authenticated } = await api('/auth/status');
@@ -247,6 +322,7 @@
     for (const sel of selects) {
       sel.innerHTML = pluginsCache.map((p) => `<option value="${p.slug}">${p.name}</option>`).join('');
     }
+    updateTokenCommand();
   }
 
   document.getElementById('p-add').addEventListener('click', async () => {
@@ -395,7 +471,8 @@
           keyBlob: document.getElementById('t-key').value.trim(),
         }),
       });
-      ['t-email', 't-machine', 't-key'].forEach((id) => (document.getElementById(id).value = ''));
+      ['t-name', 't-email', 't-machine', 't-key'].forEach((id) => (document.getElementById(id).value = ''));
+      updateTokenCommand();
       statusEl.textContent = 'Logged.';
       await loadTokens();
     } catch (err) {
