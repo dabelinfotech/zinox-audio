@@ -9,10 +9,11 @@ namespace zx
 // public key lives in source control - it can verify a signature but never
 // create one, so shipping it in the plugin binary is safe.
 //
-// This placeholder will reject every key, which is the correct fail-closed
-// state until you actually generate a key pair. Run the generator once,
-// then paste its "PUBLIC KEY" output here and rebuild.
-static constexpr const char* kPublicKey = "";
+// The matching private key lives only in Licensing/keys/private.key
+// (gitignored) on whichever machine issues keys - never commit or share it.
+// If it's ever lost or compromised, regenerate the pair and paste the new
+// public key here, but note that invalidates every key already issued.
+static constexpr const char* kPublicKey = "3,cad467cdea9e2d052431746b8fe36716475be6dd90856c6f4982e62d9e2f9bcaeccd3813e7dc04741a6b50ae89b038a7f6a84fd63e20c1098d0386b48c902c15";
 
 namespace
 {
