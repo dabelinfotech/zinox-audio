@@ -126,17 +126,24 @@ private:
         const auto midFreq = 350.0f * std::pow (5000.0f / 350.0f, midTone);
         *midBand.state = *Coeffs::makePeakFilter (fs, clampF (midFreq), 0.75f, dbToGain (midGain));
 
+        // The High band reads 40% sharper than its dB display: each dB the
+        // knob moves drives 1.4x the gain into the filter, so the control
+        // still shows ±18 dB but cuts and boosts noticeably harder than a
+        // literal reading of that number would suggest.
+        constexpr float highGainSharpness = 1.4f;
+        const auto highGainApplied = highGain * highGainSharpness;
+
         switch (highMode)
         {
             case HighMode::Air:
-                *highBand.state = *Coeffs::makeHighShelf (fs, clampF (11000.0f), 0.5f, dbToGain (highGain));
+                *highBand.state = *Coeffs::makeHighShelf (fs, clampF (11000.0f), 0.5f, dbToGain (highGainApplied));
                 break;
             case HighMode::Bright:
-                *highBand.state = *Coeffs::makeHighShelf (fs, clampF (6500.0f), 0.62f, dbToGain (highGain));
+                *highBand.state = *Coeffs::makeHighShelf (fs, clampF (6500.0f), 0.62f, dbToGain (highGainApplied));
                 break;
             case HighMode::Presence:
             default:
-                *highBand.state = *Coeffs::makePeakFilter (fs, clampF (3800.0f), 0.8f, dbToGain (highGain));
+                *highBand.state = *Coeffs::makePeakFilter (fs, clampF (3800.0f), 0.8f, dbToGain (highGainApplied));
                 break;
         }
     }
