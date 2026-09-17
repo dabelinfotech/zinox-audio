@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SystemSentinel User Manual — ZinoxAudio Software</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Installation, trial behaviour, scanning, fault reports, repair recommendations, and support for SystemSentinel by DabelTech.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#14151B;--surface:#1B1D25;--surface-2:#20222C;--line:#3A3E4C;--ink:#F2F1EB;--muted:#9A9CAC;--accent:#38BDF8;--green:#34D399;--accent-ink:#071426;--radius:8px;--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 40px -18px rgba(0,0,0,.55)}
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",sans-serif;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent)} a:hover{color:#A7F3D0} a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  h1,h2{font-family:"Unbounded",sans-serif;letter-spacing:-.01em;margin:0;text-wrap:balance} h3,h4{margin:0;font-weight:700}
+  .mono{font-family:"IBM Plex Mono",monospace}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(20px,4vw,40px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;background:rgba(20,21,27,.9);backdrop-filter:blur(8px)}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+  .brand-mark{width:30px;height:30px;border-radius:6px;background:linear-gradient(160deg,#A7F3D0,var(--green));display:grid;place-items:center;box-shadow:var(--shadow)}
+  .brand-mark svg{width:18px;height:18px}
+  .brand-name{font-family:"Unbounded",sans-serif;font-weight:700;font-size:.92rem;line-height:1.1}
+  .brand-name span{display:block;font-family:"IBM Plex Mono",monospace;font-size:.58rem;letter-spacing:.2em;color:var(--accent);margin-top:2px}
+  .top-tag{font-size:.74rem;color:var(--muted)} .top-tag a{color:var(--muted);text-decoration:none}
+
+  .titleblock{max-width:1240px;margin:0 auto;padding:clamp(36px,6vw,56px) clamp(20px,4vw,40px) clamp(24px,4vw,36px)}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:0 0 14px}
+  .titleblock h1{font-size:clamp(2rem,4vw,2.8rem);font-weight:800}
+  .titleblock p{color:var(--muted);font-size:1.05rem;max-width:58ch;margin:14px 0 0}
+  .title-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;padding:11px 18px;border-radius:999px;text-decoration:none;font-weight:700;border:1px solid var(--line)}
+  .btn-primary{background:linear-gradient(100deg,var(--accent),var(--green));color:var(--accent-ink);border-color:transparent}
+  .btn-ghost{color:var(--ink);background:transparent}
+
+  .layout{max-width:1240px;margin:0 auto;padding:0 clamp(20px,4vw,40px) 80px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:start}
+  @media (max-width:880px){.layout{grid-template-columns:1fr}}
+  .toc{position:sticky;top:76px;align-self:start}
+  @media (max-width:880px){.toc{position:static;margin-bottom:8px}}
+  .toc-group{margin-bottom:22px}
+  .toc-group h4{font-family:"IBM Plex Mono",monospace;font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  .toc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line)}
+  .toc a{display:block;padding:5px 0 5px 14px;font-size:.86rem;color:var(--muted);text-decoration:none;border-left:2px solid transparent;margin-left:-1px}
+  .toc a:hover{color:var(--ink);border-left-color:var(--accent)}
+
+  .content{min-width:0}
+  .content > section{padding-top:8px;margin-bottom:clamp(44px,6vw,64px);scroll-margin-top:76px}
+  .part-head{display:flex;align-items:baseline;gap:14px;padding-bottom:16px;margin-bottom:30px;border-bottom:2px solid var(--accent)}
+  .part-head h2{font-size:clamp(1.5rem,2.6vw,1.9rem);font-weight:800}
+  .part-head .mono{color:var(--muted);font-size:.8rem;margin-left:auto}
+  h3.sub{font-size:1.1rem;margin:0 0 6px;scroll-margin-top:76px}
+  .content > section > h3.sub{margin-top:34px}
+  .lead{color:var(--muted);margin:0 0 18px;max-width:65ch}
+  p{max-width:68ch} p + p{margin-top:12px}
+  ul.plain{list-style:none;margin:16px 0;padding:0;max-width:68ch}
+  ul.plain li{padding:9px 0 9px 20px;border-bottom:1px solid var(--line);position:relative;font-size:.93rem;color:var(--muted)}
+  ul.plain li::before{content:"";position:absolute;left:0;top:18px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  ul.plain li:last-child{border-bottom:none}
+  ul.plain li strong{color:var(--ink)}
+
+  .note{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--surface);border-radius:0 var(--radius) var(--radius) 0;padding:14px 18px;margin:18px 0;font-size:.92rem;max-width:65ch;color:var(--muted)}
+  .note strong.label{display:block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;font-family:"IBM Plex Mono",monospace}
+  .note.warn{border-left-color:var(--green)} .note.warn strong.label{color:var(--green)}
+
+  .steps{list-style:none;margin:20px 0;padding:0;counter-reset:step;display:flex;flex-direction:column;gap:0;max-width:68ch}
+  .steps li{counter-increment:step;display:grid;grid-template-columns:36px 1fr;column-gap:16px;padding:14px 0;border-top:1px solid var(--line)}
+  .steps li:first-child{border-top:none}
+  .steps li::before{content:counter(step);grid-column:1;grid-row:1 / -1;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.82rem;width:28px;height:28px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .steps h4{grid-column:2;margin:0 0 4px;font-size:.98rem}
+  .steps p{grid-column:2;margin:0;color:var(--muted);font-size:.92rem}
+
+  .key{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.72rem;letter-spacing:.05em;color:var(--accent-ink);background:var(--accent);padding:3px 8px;border-radius:4px;white-space:nowrap}
+
+  table{width:100%;border-collapse:collapse;font-size:.9rem;margin:18px 0}
+  th{text-align:left;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:8px 14px 8px 0;border-bottom:1px solid var(--line)}
+  td{padding:11px 14px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted)}
+  td:first-child,th:first-child{padding-left:0}
+  td.ctl-name{font-weight:700;color:var(--ink);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  .table-scroll{overflow-x:auto}
+
+  .contact-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0;max-width:65ch}
+  .contact-card h4{font-family:"IBM Plex Mono",monospace;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+  .contact-card p{margin:6px 0;font-size:.95rem}
+
+  footer{border-top:1px solid var(--line);padding:28px 0;text-align:center;color:var(--muted);font-size:.82rem}
+  footer p{margin:4px 0;max-width:none}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+  @media(max-width:760px){.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="index.html"><span class="brand-mark"><svg viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M64 12 108 29v31c0 27-17 45-44 56C37 105 20 87 20 60V29l44-17Z" fill="#38BDF8"/><path d="M64 23 97 36v24c0 20-12 34-33 44C43 94 31 80 31 60V36l33-13Z" fill="#0B1F3A"/><path d="M29 68h17l7-18 9 34 10-25 6 9h21" stroke="#A7F3D0" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="brand-name">ZINOX<span>AUDIO</span></span></a>
+  <span class="top-tag mono"><a href="system-sentinel.html">← Back to SystemSentinel</a> &nbsp;·&nbsp; User Manual</span>
+</header>
+
+<div class="titleblock" id="top">
+  <p class="eyebrow">User manual · Windows &amp; macOS</p>
+  <h1>SystemSentinel User Manual</h1>
+  <p>SystemSentinel is a DabelTech desktop diagnostic tool for Windows and macOS. It checks hardware and software health, identifies confirmed faults, predicts likely future problems, and suggests repair actions.</p>
+  <div class="title-actions">
+    <a class="btn btn-primary" href="system-sentinel.html">Get the 7-day trial</a>
+    <a class="btn btn-ghost" href="#trial">Start reading ↓</a>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="toc" aria-label="Manual contents">
+    <div class="toc-group">
+      <h4>Getting started</h4>
+      <ul>
+        <li><a href="#trial">Trial &amp; premium access</a></li>
+        <li><a href="#scan">Starting a scan</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <h4>The report</h4>
+      <ul>
+        <li><a href="#report">Understanding the report</a></li>
+        <li><a href="#hardware">Hardware health</a></li>
+        <li><a href="#software">Software health</a></li>
+        <li><a href="#faults">Confirmed faults</a></li>
+        <li><a href="#forecast">Future-fault forecast</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <h4>Acting on it</h4>
+      <ul>
+        <li><a href="#repair">Repair recommendations</a></li>
+        <li><a href="#details">System details</a></li>
+        <li><a href="#reports">Reports &amp; support</a></li>
+      </ul>
+    </div>
+    <div class="toc-group">
+      <h4>Reference</h4>
+      <ul>
+        <li><a href="#safety">Safety notes</a></li>
+        <li><a href="#where">Where to find it</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <section id="trial">
+      <div class="part-head"><h2>Trial and premium access</h2><span class="mono">01</span></div>
+      <p class="lead">Each desktop installation includes a seven-day full-feature trial. The trial starts when SystemSentinel is first opened.</p>
+      <h3 class="sub">During the trial</h3>
+      <p>The app can:</p>
+      <ul class="plain">
+        <li>Scan hardware and software health.</li>
+        <li>Display the computer name, model, generation, CPU, RAM, storage, screen resolution, and operating system.</li>
+        <li>Report confirmed faults and likely future faults.</li>
+        <li>Provide fault-specific repair recommendations.</li>
+        <li>Export and print diagnostic reports.</li>
+      </ul>
+      <h3 class="sub">When the trial ends</h3>
+      <p>After seven days have elapsed, the diagnostic dashboard is locked and the app displays the premium upgrade contact details.</p>
+      <div class="contact-card">
+        <h4>Premium access</h4>
+        <p>Phone: <a href="tel:+2348062168465">+234 806 216 8465</a></p>
+        <p>Email: <a href="mailto:dabelinfotech@gmail.com">dabelinfotech@gmail.com</a></p>
+      </div>
+      <div class="note">
+        <strong class="label">How the trial clock works</strong>
+        The trial clock is stored locally and records the last observed time to reduce clock-rollback abuse. The trial does not replace a full licensing system; premium activation and payment are handled by DabelTech.
+      </div>
+    </section>
+
+    <section id="scan">
+      <div class="part-head"><h2>Starting a scan</h2><span class="mono">02</span></div>
+      <ol class="steps">
+        <li><h4>Open SystemSentinel</h4><p>Launch the app from your Start menu, Applications folder, or the portable executable.</p></li>
+        <li><h4>Confirm the detected computer model</h4><p>Check the device summary at the top of the dashboard to be sure the right machine was detected.</p></li>
+        <li><h4>Select <span class="key">Scan now</span></h4><p>The scan begins immediately and runs through five stages.</p></li>
+        <li><h4>Wait for the scan stages to complete</h4><p>System data → Power check → Disk health → Software logs → Fault review.</p></li>
+        <li><h4>Review the results</h4><p>Read the overall score first, then the individual component cards.</p></li>
+      </ol>
+      <div class="note">
+        <strong class="label">Automatic refresh</strong>
+        The app refreshes its diagnostic data automatically during normal use, so you do not need to rescan constantly to keep readings current.
+      </div>
+    </section>
+
+    <section id="report">
+      <div class="part-head"><h2>Understanding the report</h2><span class="mono">03</span></div>
+      <h3 class="sub">Overall system status</h3>
+      <p>The score summarizes the current health of the monitored components. A warning or critical status means the related evidence and recommended action should be reviewed.</p>
+
+      <h3 class="sub" id="hardware">Hardware health</h3>
+      <p>SystemSentinel evaluates:</p>
+      <ul class="plain">
+        <li>CPU load and temperature indicators</li>
+        <li>Memory pressure</li>
+        <li>Storage capacity and estimated drive health</li>
+        <li>Cooling and thermal load</li>
+        <li>GPU temperature indicators</li>
+        <li>Power and battery condition</li>
+        <li>Network errors</li>
+      </ul>
+
+      <h3 class="sub" id="software">Software health</h3>
+      <p>SystemSentinel evaluates:</p>
+      <ul class="plain">
+        <li>Operating system updates</li>
+        <li>Drivers and peripherals</li>
+        <li>Startup programs</li>
+        <li>Security software status</li>
+        <li>Application crashes and hangs</li>
+        <li>Recent system or diagnostic logs</li>
+        <li>File-system warning indicators</li>
+      </ul>
+
+      <h3 class="sub" id="faults">Confirmed faults</h3>
+      <p>Confirmed faults are current findings that exceed the diagnostic warning threshold. They are evidence-based indicators, not a substitute for a technician's physical inspection.</p>
+
+      <h3 class="sub" id="forecast">Future-fault forecast</h3>
+      <p>Forecast percentages are risk estimates based on the available operating-system signals and current health trends.</p>
+      <div class="note warn">
+        <strong class="label">Back up first</strong>
+        Back up important data before acting on storage, battery, thermal, or power warnings.
+      </div>
+    </section>
+
+    <section id="repair">
+      <div class="part-head"><h2>Repair recommendations</h2><span class="mono">04</span></div>
+      <p class="lead">Recommendations are generated for the specific fault detected. Examples include:</p>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Area</th><th>Recommended action</th></tr></thead>
+        <tbody>
+          <tr><td class="ctl-name">CPU</td><td>Reduce sustained CPU load and inspect cooling.</td></tr>
+          <tr><td class="ctl-name">Memory</td><td>Close memory-heavy applications or consider a RAM upgrade.</td></tr>
+          <tr><td class="ctl-name">Storage</td><td>Back up data and run SMART or disk verification for storage warnings.</td></tr>
+          <tr><td class="ctl-name">Thermal</td><td>Clean vents and confirm fan operation for thermal problems.</td></tr>
+          <tr><td class="ctl-name">Drivers</td><td>Update drivers for peripheral or adapter issues.</td></tr>
+          <tr><td class="ctl-name">Updates</td><td>Install operating-system and security updates.</td></tr>
+          <tr><td class="ctl-name">Startup</td><td>Disable unnecessary startup programs.</td></tr>
+          <tr><td class="ctl-name">Software faults</td><td>Review event logs and crash reports for recurring software faults.</td></tr>
+          <tr><td class="ctl-name">File system</td><td>Run file-system repair after backing up important data.</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p>After completing a repair, restart the computer and run another scan to confirm whether the fault has cleared.</p>
+    </section>
+
+    <section id="details">
+      <div class="part-head"><h2>System details</h2><span class="mono">05</span></div>
+      <p class="lead">The <strong>Current system details</strong> section may display:</p>
+      <ul class="plain">
+        <li>Computer name</li>
+        <li>Computer model</li>
+        <li>Hardware generation</li>
+        <li>Screen resolution</li>
+        <li>CPU model</li>
+        <li>Total and available RAM</li>
+        <li>Drive capacity and usage</li>
+        <li>Battery level</li>
+        <li>Drive model</li>
+        <li>Uptime</li>
+        <li>Operating system version</li>
+        <li>Startup application count</li>
+      </ul>
+      <div class="note">
+        <strong class="label">Unavailable fields</strong>
+        Some fields may show <strong>Unavailable</strong> when the operating system does not expose the information, or when the app is running without native desktop access.
+      </div>
+    </section>
+
+    <section id="reports">
+      <div class="part-head"><h2>Reports and support</h2><span class="mono">06</span></div>
+      <p>Use <span class="key">Export report</span> to save a text report containing the detected model, platform, health scores, confirmed faults, software checks, repair summary, diagnostic log, and recommended actions.</p>
+      <p>Use <span class="key">Print report</span> to create a paper or PDF copy for a technician.</p>
+      <div class="contact-card">
+        <h4>Premium access after the trial</h4>
+        <p>Phone: <a href="tel:+2348062168465">+234 806 216 8465</a></p>
+        <p>Email: <a href="mailto:dabelinfotech@gmail.com">dabelinfotech@gmail.com</a></p>
+      </div>
+    </section>
+
+    <section id="safety">
+      <div class="part-head"><h2>Safety notes</h2><span class="mono">07</span></div>
+      <p>SystemSentinel reports and recommends; it does not automatically delete files, change drivers, repair the file system, modify security settings, or replace hardware.</p>
+      <div class="note warn">
+        <strong class="label">Before you repair</strong>
+        Back up important files before disk or file-system repairs, and consult a qualified technician for critical power, thermal, storage, or electrical faults.
+      </div>
+    </section>
+
+    <section id="where">
+      <div class="part-head"><h2>Where to find it</h2><span class="mono">08</span></div>
+      <ul class="plain">
+        <li><strong>Product page and downloads:</strong> <a href="system-sentinel.html">SystemSentinel on ZinoxAudio Softwares</a></li>
+        <li><strong>Source package:</strong> <a href="downloads/SystemSentinel-source.zip" download>SystemSentinel-source.zip</a></li>
+        <li><strong>Publisher:</strong> DabelTech</li>
+      </ul>
+    </section>
+
+  </div>
+</div>
+
+<footer><div class="wrap"><p>SystemSentinel · Computer health diagnostics and fault prediction</p><p>Powered by Dabeltech · <a href="index.html">Back to ZinoxAudio</a></p></div></footer>
+</body>
+</html>
