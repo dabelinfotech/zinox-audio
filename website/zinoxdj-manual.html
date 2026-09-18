@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ZinoxDJ User Manual — ZinoxAudio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Installation, controls, analysis, suggestions and troubleshooting for ZinoxDJ.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#14151B;--surface:#1B1D25;--line:#3A3E4C;--ink:#F2F1EB;--muted:#9A9CAC;--accent:#38BDF8;--green:#34D399;--radius:8px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",sans-serif;font-size:16px;line-height:1.7}
+  a{color:var(--accent)}a:hover{color:#A7F3D0}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px clamp(20px,4vw,40px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;background:rgba(20,21,27,.92);backdrop-filter:blur(8px)}
+  .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+  .brand-mark{width:30px;height:30px;border-radius:6px;background:#0B0D12;border:1px solid #24506B;display:grid;place-items:center;padding:4px}
+  .brand-mark svg{width:100%;height:100%}
+  .brand-name{font-family:"Unbounded",sans-serif;font-weight:700;font-size:.92rem;line-height:1.1}
+  .brand-name span{display:block;font-family:"IBM Plex Mono",monospace;font-size:.58rem;letter-spacing:.2em;color:var(--accent);margin-top:2px}
+  .top-tag{font-size:.74rem;color:var(--muted)}.top-tag a{color:var(--muted);text-decoration:none}
+  .layout{max-width:1160px;margin:0 auto;padding:40px 24px 80px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:48px;align-items:start}
+  nav.toc{position:sticky;top:96px;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line);padding-left:16px}
+  nav.toc a{color:var(--muted);text-decoration:none;font-size:.84rem;padding:3px 0}
+  nav.toc a:hover{color:var(--accent)}
+  article{min-width:0}
+  h1{font-family:"Unbounded",sans-serif;font-size:clamp(1.9rem,4vw,2.8rem);margin:0 0 8px;line-height:1.1}
+  h2{font-family:"Unbounded",sans-serif;font-size:1.35rem;margin:44px 0 12px;padding-top:8px}
+  h3{font-size:1.02rem;margin:26px 0 6px;color:var(--green)}
+  p{color:var(--muted);margin:12px 0}
+  strong{color:var(--ink)}
+  code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--ink)}
+  ul{color:var(--muted);padding-left:22px;margin:12px 0}
+  li{margin:5px 0}
+  hr{border:0;border-top:1px solid var(--line);margin:40px 0}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.93rem}
+  th{text-align:left;font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--line);padding:8px 10px}
+  td{border-bottom:1px solid #22242E;padding:9px 10px;color:var(--muted);vertical-align:top}
+  td strong{color:var(--ink)}
+  blockquote{border-left:3px solid var(--accent);background:var(--surface);margin:18px 0;padding:4px 18px}
+  blockquote p{margin:10px 0}
+  footer{border-top:1px solid var(--line);padding:28px 24px;text-align:center;color:var(--muted);font-size:.82rem}
+  footer p{margin:4px 0}
+  @media(max-width:860px){.layout{grid-template-columns:1fr;gap:24px}nav.toc{position:static;border-left:0;border-bottom:1px solid var(--line);padding:0 0 16px;flex-direction:row;flex-wrap:wrap;gap:12px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="index.html">
+    <span class="brand-mark"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="zdjm" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#38BDF8"/><stop offset="100%" stop-color="#34D399"/></linearGradient></defs><path d="M3.4 18.4 A12.6 12.6 0 0 1 28.6 18.4" fill="none" stroke="url(#zdjm)" stroke-width="2.6" stroke-linecap="round"/><rect x="1.2" y="16.3" width="4.4" height="9.2" rx="2.2" fill="url(#zdjm)"/><rect x="26.4" y="16.3" width="4.4" height="9.2" rx="2.2" fill="url(#zdjm)"/><path d="M10.6 12.2 H21.4 L10.6 20.8 H21.4" fill="none" stroke="url(#zdjm)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="brand-name">ZINOX<span>AUDIO</span></span>
+  </a>
+  <span class="top-tag"><a href="zinoxdj.html">← ZinoxDJ</a> &nbsp;·&nbsp; User manual</span>
+</header>
+
+<div class="layout">
+  <nav class="toc" aria-label="Contents"><a href="#1-installing">Installing</a><a href="#2-adding-your-music">Adding your music</a><a href="#3-analysis">Analysis</a><a href="#4-the-decks">The decks</a><a href="#5-performance-pads">Performance pads</a><a href="#6-the-mixer">The mixer</a><a href="#7-effects">Effects</a><a href="#8-suggestions">Suggestions</a><a href="#9-sidelist-and-automix">Sidelist and Automix</a><a href="#10-library-details">Library details</a><a href="#11-recording">Recording</a><a href="#12-keyboard-and-midi">Keyboard and MIDI</a><a href="#13-where-your-data-lives">Where your data lives</a><a href="#14-troubleshooting">Troubleshooting</a><a href="#15-what-is-not-in-this-version">What is not in this version</a><a href="#support">Support</a></nav>
+  <article>
+<h1 id="zinoxdj-user-manual">ZinoxDJ User Manual</h1>
+<p>ZinoxDJ is a DJ workstation for Windows and macOS. It gives you two decks, a mixer and a browser — and it studies your own music so it can tell you what mixes well with what is playing.</p>
+<p>This manual covers installation, the trial, every control on screen, and the suggestion engine.</p>
+<hr>
+<h2 id="1-installing">1. Installing</h2>
+<h3 id="windows">Windows</h3>
+<ul>
+<li>Download <strong>ZinoxDJ-Setup.exe</strong>.</li>
+<li>Run it. Windows SmartScreen may warn you the publisher is unrecognised — the installer is not code-signed yet. Choose <strong>More info → Run anyway</strong>.</li>
+<li>Pick an install folder when asked. ZinoxDJ adds a Start menu entry, a desktop shortcut and an uninstaller.</li>
+</ul>
+<h3 id="macos">macOS</h3>
+<ul>
+<li>Download <strong>ZinoxDJ-macOS.dmg</strong>.</li>
+<li>Open it and drag ZinoxDJ to Applications.</li>
+<li>The first launch is blocked because the app is not notarised yet. Right-click the app and choose <strong>Open</strong>, then confirm. You only do this once.</li>
+</ul>
+<h3 id="your-sevenday-trial">Your seven-day trial</h3>
+<p>ZinoxDJ runs in full for seven days from first launch. The header shows how many days are left, and turns amber in the last two.</p>
+<p>When the trial ends, loading and playback stop and an upgrade panel appears. <strong>Nothing is deleted</strong> — your library, analysis, ratings, cue points and settings are all kept and come straight back when you licence the software.</p>
+<p>To buy a licence:</p>
+<ul>
+<li><strong>+234 806 216 8465</strong></li>
+<li><strong>dabelinfotech@gmail.com</strong></li>
+</ul>
+<hr>
+<h2 id="2-adding-your-music">2. Adding your music</h2>
+<p>Click <strong>Add folder</strong> and point ZinoxDJ at a folder of music. It reads MP3, WAV, FLAC, M4A, AAC, OGG, Opus, AIFF and WMA.</p>
+<p><strong>Your files are never copied, moved or changed.</strong> ZinoxDJ stores only the file paths and what it works out about each track.</p>
+<p><strong>Add files</strong> picks individual tracks instead of a whole folder.</p>
+<p>The folder tree down the left side of the browser shows where your music lives. Click a folder to show only its tracks; click <strong>Local Music</strong> at the top to go back to everything.</p>
+<hr>
+<h2 id="3-analysis">3. Analysis</h2>
+<p>Before ZinoxDJ can beat match or suggest anything, it has to listen to each track. This happens in the background and each track is analysed only once.</p>
+<p>Go to <strong>Settings → Library</strong> and click <strong>Analyse missing</strong>. The header shows progress. Expect roughly two seconds per track, and you can keep working while it runs.</p>
+<p>For each track ZinoxDJ works out:</p>
+<table><thead><tr>
+<th>Value</th>
+<th>What it means</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>BPM</strong></td>
+<td>Tempo, to a tenth of a beat, with a beat grid so decks can be lined up.</td>
+</tr>
+<tr>
+<td><strong>Key</strong></td>
+<td>Musical key, shown on the Camelot wheel (8A, 11B and so on).</td>
+</tr>
+<tr>
+<td><strong>Energy</strong></td>
+<td>How hard the track hits, from 1 to 5 bars.</td>
+</tr>
+<tr>
+<td><strong>Genre</strong></td>
+<td>From the file's tag. Untagged files get an estimate from the audio.</td>
+</tr>
+<tr>
+<td><strong>Groove</strong></td>
+<td>The rhythmic feel — how busy, swung and punchy it is. Used for suggestions.</td>
+</tr>
+</tbody></table>
+<p>If a track already carries a BPM or key written by other DJ software, ZinoxDJ keeps it and fills in the rest.</p>
+<p>A small <strong>?</strong> beside the BPM means ZinoxDJ was not confident. Check the beat grid on that track before trusting sync.</p>
+<hr>
+<h2 id="4-the-decks">4. The decks</h2>
+<p>Load a track by <strong>dragging it from the browser onto a deck</strong>, by clicking the small <strong>A</strong> or <strong>B</strong> button on its row, or by double-clicking the row to send it to deck A.</p>
+<h3 id="transport">Transport</h3>
+<table><thead><tr>
+<th>Control</th>
+<th>What it does</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>CUE</strong></td>
+<td>Hold to preview from the cue point. Release to jump back.</td>
+</tr>
+<tr>
+<td><strong>▶ / ‖</strong></td>
+<td>Play or pause.</td>
+</tr>
+<tr>
+<td><strong>SYNC</strong></td>
+<td>Match this deck's tempo <em>and</em> beat position to the other deck.</td>
+</tr>
+</tbody></table>
+<h3 id="jog-wheel">Jog wheel</h3>
+<ul>
+<li>Drag the <strong>outer ring</strong> to bend the tempo — push it forward or pull it back to nudge a beat into line, exactly like nudging a record.</li>
+<li>Drag the <strong>centre platter</strong> to scrub through the track.</li>
+</ul>
+<h3 id="pitch">Pitch</h3>
+<p>The vertical fader changes tempo. <strong>±8%</strong> cycles the range (4, 8, 10, 16, 25, 50%). Double-click the fader to snap back to the original tempo.</p>
+<p><strong>KEY</strong> turns on key lock: the tempo changes but the pitch stays put, so a track pulled 6% faster does not sound sharp.</p>
+<p>The <strong>− 0 +</strong> buttons below transpose the track in semitones, independently of tempo — useful for forcing two records into the same key.</p>
+<h3 id="waveforms">Waveforms</h3>
+<p>The wide strips across the top are the beat-matching view: the playhead sits in the centre and the music scrolls past. The vertical lines are the beat grid, with every fourth beat brighter to mark the bar. Line the two decks' grids up and they are in time.</p>
+<p>The narrow strip on each deck is the whole track. Click it to jump anywhere.</p>
+<hr>
+<h2 id="5-performance-pads">5. Performance pads</h2>
+<p>Each deck has eight pads and four banks. Pick a bank with the buttons above them.</p>
+<h3 id="cues">CUES</h3>
+<p>Click an empty pad to drop a hot cue at the current position. Click it again to jump straight back there. <strong>Shift-click</strong> clears it.</p>
+<h3 id="rolls">ROLLS</h3>
+<p><strong>Hold</strong> a pad for a momentary loop, from 1/8 of a beat up to 16 beats. When you let go, playback carries on from where it <em>would</em> have been — so the track is still in time with everything else.</p>
+<h3 id="slicer">SLICER</h3>
+<p>Divides the current bar into eight. <strong>Hold</strong> a pad to jump to that slice; release to drop back onto the grid.</p>
+<h3 id="sampler">SAMPLER</h3>
+<p>Click an empty pad to grab four beats from the deck. Click the filled pad to fire it. <strong>Shift-click</strong> makes it loop; <strong>right-click</strong> clears the slot.</p>
+<p>Samples go straight to the master output, so the crossfader cannot cut them off.</p>
+<h3 id="quant">QUANT</h3>
+<p>With <strong>QUANT</strong> on, cues, loops and jumps snap to the nearest beat, so a mistimed press still lands in time. Turn it off for free-form work.</p>
+<hr>
+<h2 id="6-the-mixer">6. The mixer</h2>
+<p>Each channel has, top to bottom:</p>
+<ul>
+<li><strong>GAIN</strong> — level trim. ZinoxDJ sets this automatically when a track loads so everything arrives at a matched level.</li>
+<li><strong>HIGH / MID / LOW</strong> — three-band EQ. Turned fully left, a band is killed, not just reduced.</li>
+<li><strong>FILTER</strong> — one knob: left sweeps a high-pass up, right sweeps a low-pass down, centre is off.</li>
+<li><strong>Channel fader</strong> and a <strong>level meter</strong>.</li>
+<li><strong>A / — / B</strong> — which side of the crossfader this channel feeds. The middle option takes it off the crossfader entirely.</li>
+<li><strong>CUE</strong> — sends the channel to your headphones.</li>
+</ul>
+<p>The <strong>crossfader</strong> sits underneath, with a curve selector: <strong>Smooth</strong> for blends, <strong>Sharp</strong> for quick cuts, <strong>Cut</strong> for scratching.</p>
+<p><strong>PHONES</strong> and <strong>MASTER</strong> in the top right set headphone and main output level.</p>
+<blockquote>
+<p>ZinoxDJ currently mixes headphones and master to the same output device. If you</p>
+<p>are cueing in headphones, use a controller or audio interface that provides its</p>
+<p>own split, or monitor the master.</p>
+</blockquote>
+<hr>
+<h2 id="7-effects">7. Effects</h2>
+<p>Each deck has two effect slots. Each slot has a knob and a menu: <strong>echo, flanger, reverb, phaser, gate</strong> or <strong>crusher</strong>. The knob is a blend, so the dry signal is never interrupted.</p>
+<p>The number button between the slots sets the length of the tempo-synced effects in beats (1/4, 1/2, 1, 2). Echo and gate follow the deck's BPM automatically.</p>
+<h3 id="vocal">VOCAL</h3>
+<p>Turn it <strong>left</strong> to push the vocal down and leave something close to an instrumental. Turn it <strong>right</strong> to bring the vocal forward.</p>
+<p>This works by cancelling or isolating the centre of the stereo image, because lead vocals are almost always panned dead centre. <strong>It is not a true stem separator.</strong> On a mono recording, a track with a centred bassline, or a vocal spread wide across the stereo field, it will not work cleanly. Try it on the track before you rely on it in a set.</p>
+<hr>
+<h2 id="8-suggestions">8. Suggestions</h2>
+<p>This is what ZinoxDJ adds over an ordinary DJ app, and it is <strong>off until you turn it on</strong>. Nothing about the decks changes either way.</p>
+<p>Open the <strong>Suggestions</strong> tab and click <strong>Turn suggestions on</strong>.</p>
+<p>ZinoxDJ ranks everything in your library against whatever is on the deck, scoring each track on five things:</p>
+<ul>
+<li><strong>Tempo</strong> — how far it would have to be pitched</li>
+<li><strong>Key</strong> — harmonic compatibility on the Camelot wheel</li>
+<li><strong>Genre</strong> — same or neighbouring style</li>
+<li><strong>Groove</strong> — whether the rhythmic feel matches</li>
+<li><strong>Energy</strong> — whether it lifts, holds or drops the intensity</li>
+</ul>
+<p>Every row shows a match score out of 100 and the reasons behind it, so you can see <em>why</em> a track was suggested instead of taking it on trust.</p>
+<h3 id="steering-it">Steering it</h3>
+<ul>
+<li><strong>Cool / Hold / Build</strong> — whether you want the energy to drop, stay or rise.</li>
+<li><strong>Harmonic only</strong> — hide anything that would clash musically.</li>
+<li><strong>Match against</strong> — rank against deck A or deck B.</li>
+</ul>
+<h3 id="tuning-it">Tuning it</h3>
+<p><strong>Settings → Suggestion engine</strong> lets you set how much each of the five factors matters, how wide a tempo window counts as mixable, whether half and double time count as a match, and whether to hide tracks you have already played.</p>
+<p>If suggestions look thin, it is almost always because only part of your library has been analysed. The panel tells you when that is the case.</p>
+<hr>
+<h2 id="9-sidelist-and-automix">9. Sidelist and Automix</h2>
+<p>The <strong>Sidelist</strong> tab is your queue. Add tracks with the <strong>+</strong> button on any row, or from the info panel. Reorder with the arrows.</p>
+<p>Turn <strong>Automix</strong> on and ZinoxDJ will take over: as the playing track nears its end it loads the next one, beat matches it, and crossfades across.</p>
+<p><strong>If the queue is empty, Automix pulls the top suggestion instead</strong> — so with the suggestion engine on, ZinoxDJ can run a whole set by itself.</p>
+<hr>
+<h2 id="10-library-details">10. Library details</h2>
+<p>Select any track to see its details on the right: artwork, album, year, comment, when you first added it, when you last played it, and how many times.</p>
+<p>Set a <strong>star rating</strong> from the panel or straight from the table. Click the same star again to clear the rating.</p>
+<p>Sort by any column. Search matches title, artist, album, genre — and also BPM and key, so typing <code>8A</code> or <code>128</code> finds tracks by what ZinoxDJ heard.</p>
+<hr>
+<h2 id="11-recording">11. Recording</h2>
+<p><strong>● Record</strong> in the header captures the master output. Click <strong>■ Stop</strong> and your browser save dialog appears. Recordings are <code>.webm</code> files, which VLC and most editors open directly.</p>
+<hr>
+<h2 id="12-keyboard-and-midi">12. Keyboard and MIDI</h2>
+<table><thead><tr>
+<th>Key</th>
+<th>Action</th>
+</tr></thead><tbody>
+<tr>
+<td><strong>Q</strong> / <strong>P</strong></td>
+<td>Play or pause deck A / B</td>
+</tr>
+<tr>
+<td><strong>A</strong> / <strong>L</strong></td>
+<td>Sync deck A / B</td>
+</tr>
+<tr>
+<td><strong>1</strong>–<strong>8</strong></td>
+<td>Hot cues on deck A</td>
+</tr>
+<tr>
+<td><strong>F1</strong>–<strong>F8</strong></td>
+<td>Hot cues on deck B</td>
+</tr>
+</tbody></table>
+<p>Hold <strong>Shift</strong> while dragging any knob or fader for fine control. <strong>Double-click</strong> any knob or fader to reset it.</p>
+<h3 id="midi-controllers">MIDI controllers</h3>
+<p><strong>Settings → MIDI controller</strong> connects a controller over MIDI.</p>
+<p>Controllers vary far too much for a one-size mapping, so ZinoxDJ learns yours: turn MIDI on, click the action you want in the list, then <strong>move the control on your controller</strong>. It binds immediately. Your mappings are saved.</p>
+<hr>
+<h2 id="13-where-your-data-lives">13. Where your data lives</h2>
+<ul>
+<li><strong>Windows:</strong> <code>%APPDATA%\ZinoxDJ</code></li>
+<li><strong>macOS:</strong> <code>~/Library/Application Support/ZinoxDJ</code></li>
+</ul>
+<p>That folder holds your library, analysis results, waveform caches and settings. Deleting it resets ZinoxDJ; it never touches your music files.</p>
+<hr>
+<h2 id="14-troubleshooting">14. Troubleshooting</h2>
+<p><strong>A track will not load.</strong> The file may have moved or been renamed. ZinoxDJ remembers paths, not copies. Re-add the folder.</p>
+<p><strong>BPM looks wrong.</strong> Some tracks are genuinely ambiguous. Drum &amp; bass in particular may be reported at half speed (87 instead of 174). Mixing still works, because the suggestion engine treats half and double time as compatible, but the beat grid will be at the slower rate.</p>
+<p><strong>Key looks wrong.</strong> Key detection is very good but not perfect, especially on sparse or heavily processed tracks. If another tool already wrote a key tag, ZinoxDJ trusts that instead.</p>
+<p><strong>Sync drifts.</strong> Check the beat grid on the offending track. A <strong>?</strong> next to the BPM means low confidence.</p>
+<p><strong>No sound.</strong> Check MASTER is up, the channel fader is up, the crossfader is not pushed fully to the other deck, and the channel's crossfader assign is not set to the wrong side.</p>
+<p><strong>Analysis is slow.</strong> It runs across several background workers and only ever runs once per track. A large library takes a while the first time and is instant thereafter.</p>
+<hr>
+<h2 id="15-what-is-not-in-this-version">15. What is not in this version</h2>
+<p>Stated plainly so you know before you buy:</p>
+<ul>
+<li><strong>True stem separation</strong> (isolating vocals, drums and instruments properly). The VOCAL knob is a stereo-image trick, not a stem separator.</li>
+<li><strong>Video mixing</strong> and <strong>karaoke</strong>.</li>
+<li><strong>Timecode / DVS</strong> control from vinyl or CDJs.</li>
+<li><strong>Split headphone output</strong> to a separate device.</li>
+<li><strong>Streaming service</strong> libraries.</li>
+</ul>
+<hr>
+<h2 id="support">Support</h2>
+<p><strong>DabelTech</strong> +234 806 216 8465 · dabelinfotech@gmail.com</p>
+  </article>
+</div>
+
+<footer>
+  <p><a href="zinoxdj.html">ZinoxDJ</a> · <a href="index.html">ZinoxAudio</a> · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="refund.html">Refund policy</a></p>
+  <p>Support: +234 806 216 8465 · dabelinfotech@gmail.com</p>
+  <p>Powered by Dabeltech</p>
+</footer>
+</body>
+</html>
