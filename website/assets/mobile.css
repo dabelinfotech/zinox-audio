@@ -1,0 +1,294 @@
+/*
+ * ZinoxAudio — mobile layout.
+ *
+ * The pages were built for a desktop width: the navigation never collapsed, the
+ * grids kept their column counts, and the widest element pushed the whole page
+ * sideways so it scrolled horizontally on a phone.
+ *
+ * This is loaded after each page's own <style>, so equal-specificity rules here
+ * win on source order and the desktop layout is untouched above the breakpoint.
+ *
+ * Kept as one shared file rather than edits inside nine pages, so the mobile
+ * behaviour stays consistent and there is a single place to change it.
+ */
+
+/* ------------------------------------------------------------ everything */
+
+/* A stray wide element is the usual cause of sideways scrolling, so nothing is
+   allowed to exceed the column it sits in. */
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 860px) {
+  /* Long unbroken strings — file names, URLs, keys — would otherwise set the
+     page width on their own. */
+  body {
+    overflow-wrap: break-word;
+  }
+
+  /* --------------------------------------------------------- navigation */
+
+  /* index.html: brand, links and call to action on one row. Below this width
+     the links alone are wider than the screen, so the row wraps and the links
+     take a line of their own. */
+  .navbar {
+    flex-wrap: wrap;
+    row-gap: 10px;
+    column-gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .navbar .brand {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .navbar > .btn {
+    order: 2;
+    flex: 0 0 auto;
+    padding: 9px 14px;
+    font-size: 0.86rem;
+  }
+
+  .links {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+    justify-content: flex-start;
+    padding-top: 4px;
+    border-top: 1px solid var(--line, #2a2f3a);
+  }
+
+  .links > a,
+  .nav-dropdown > summary {
+    padding: 6px 0;
+    font-size: 0.92rem;
+  }
+
+  /* A dropdown pinned to the right edge hangs off the screen. Opening it in
+     flow keeps it on the page and reads better on a touch screen anyway. */
+  .nav-dropdown[open] .dropdown-menu {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    width: 100%;
+    margin-top: 6px;
+    transform: none;
+  }
+
+  /* Closed, a dropdown sits inline with the other links. It only claims a full
+     row once opened, so the menu is compact until something needs the space. */
+  .nav-dropdown {
+    flex: 0 0 auto;
+  }
+
+  .nav-dropdown[open] {
+    flex: 1 1 100%;
+  }
+
+  /* The product and manual pages use a simpler two-part header. */
+  .top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  /* ------------------------------------------------------------ layout */
+
+  .wrap,
+  .layout {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Every multi-column layout on the site collapses to one column. Listed by
+     name rather than with a blanket rule so a deliberate two-up stays possible
+     later. */
+  .hero,
+  .twocol,
+  .grid,
+  .steps,
+  .specs,
+  .specs-grid,
+  .pricing-grid,
+  .cards,
+  .feature-grid,
+  .layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero {
+    gap: 26px;
+    padding-top: 40px;
+    padding-bottom: 44px;
+  }
+
+  /* The bordered spec strip loses its vertical rules when stacked, otherwise
+     the last cell keeps a hanging border. */
+  .spec {
+    border-right: 0 !important;
+    border-bottom: 1px solid var(--line, #3A3E4C);
+  }
+
+  .spec:last-child {
+    border-bottom: 0;
+  }
+
+  /* ------------------------------------------------- manual side column */
+
+  /* The contents column is sticky beside the text on desktop; on a phone it
+     belongs above it, as a wrapping row. */
+  nav.toc {
+    position: static;
+    border-left: 0;
+    border-bottom: 1px solid var(--line, #3A3E4C);
+    padding: 0 0 14px;
+    margin-bottom: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+  }
+
+  /* ------------------------------------------------------------ tables */
+
+  /* A table wide enough to need it scrolls inside its own box rather than
+     widening the page. */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th,
+  td {
+    white-space: normal;
+  }
+
+  /* ------------------------------------------------------------ actions */
+
+  /* Buttons go full width so they are easy to hit and do not leave a ragged
+     half-row. */
+  .hero-actions {
+    gap: 10px;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ------------------------------------------------------------- typing */
+
+  /* Anything under about 12px is hard to read on a phone; the smallest labels
+     on the site were under 10. */
+  .eyebrow,
+  .card .num,
+  .step .num,
+  .spec span,
+  .note strong,
+  .shot-caption,
+  .top-tag,
+  .brand-name span,
+  .brand .sub,
+  .tag,
+  footer,
+  footer p {
+    font-size: 0.78rem !important;
+    letter-spacing: 0.08em;
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 8vw, 2.6rem) !important;
+    line-height: 1.12;
+  }
+
+  h2 {
+    font-size: clamp(1.35rem, 6vw, 1.8rem) !important;
+  }
+
+  /* --------------------------------------------------------- tap targets */
+
+  /* Small links sitting shoulder to shoulder are hard to hit accurately. */
+  .foot-links a,
+  nav.toc a,
+  .dropdown-menu a {
+    display: inline-block;
+    min-height: 34px;
+    line-height: 34px;
+  }
+
+  .btn {
+    min-height: 42px;
+  }
+
+  /* --------------------------------------------------- signal chain */
+
+  /* Deliberately left alone. The signal-chain diagram on plugins.html is 700px
+     wide by design and already sits inside a container that scrolls it
+     horizontally. Collapsing it to one column turned a four-across diagram into
+     a single 700px column that still had to be scrolled — worse than what was
+     there. It does not widen the page, so it is not a problem to solve.
+     Documented here so it is not "fixed" again. */
+
+  /* ------------------------------------------------------ small labels */
+
+  /* The remaining sub-12px text, by the names the individual pages use for it.
+     Under about 12px it is genuinely hard to read on a phone. */
+  h4,
+  caption,
+  th,
+  cite,
+  .kicker,
+  .badge,
+  .badge-demo,
+  .key,
+  .price-fine,
+  .placeholder-note,
+  .k,
+  .sub {
+    font-size: 0.8rem !important;
+  }
+
+  /* ------------------------------------------------------------ figures */
+
+  .shot-figure {
+    margin-left: -16px;
+    margin-right: -16px;
+  }
+
+  .shot {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
+
+/* A phone held upright is narrower still; the tightest gutters go here rather
+   than compromising the common case above. */
+@media (max-width: 420px) {
+  .wrap,
+  .layout {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .links {
+    gap: 8px 14px;
+  }
+
+  .navbar > .btn {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+}
